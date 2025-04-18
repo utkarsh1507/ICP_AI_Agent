@@ -1,0 +1,27 @@
+{
+  "canisters": {
+    "ai_agent_icp_backend": {
+      "candid": "src/ai_agent_icp_backend/ai_agent_icp_backend.did",
+      "package": "ai_agent_icp_backend",
+      "type": "rust"
+    },
+    "ai_agent_icp_frontend": {
+      "dependencies": [
+        "ai_agent_icp_backend"
+      ],
+      "source": [
+        "src/ai_agent_icp_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "ai_agent_icp_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
