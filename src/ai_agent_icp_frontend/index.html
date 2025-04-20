@@ -3,19 +3,108 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width" />
-  <title>IC Hello Starter</title>
-  <base href="/" />
-  <link rel="icon" href="/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ICP Agent Framework</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      cursor: pointer;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    h1,
+    h2 {
+      color: #333;
+    }
+
+    #task-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    button.delete-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    button.delete-btn:hover {
+      background-color: #d32f2f;
+    }
+  </style>
 </head>
 
 <body>
-  <div class="browser-warning">
-    ⚠️ If this page appears broken, try reloading. If the problem persists, try switching browsers; Chrome or
-    Firefox are recommended.
+  <h1>ICP Agent Framework</h1>
+
+  <div>
+    <h2>Create Task</h2>
+    <div class="form-group">
+      <label for="task-id">Task ID:</label>
+      <input type="number" id="task-id" placeholder="Enter task ID" />
+    </div>
+    <div class="form-group">
+      <label for="task-data">Task Data:</label>
+      <input type="text" id="task-data" placeholder="Enter task data" />
+    </div>
+    <div class="form-group">
+      <label for="task-freq">Frequency (seconds):</label>
+      <input type="number" id="task-freq" placeholder="Enter frequency in seconds" />
+    </div>
+    <button id="create-task-btn">Create Task</button>
   </div>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
+
+  <div>
+    <h2>Task List</h2>
+    <button id="refresh-tasks-btn">Refresh Tasks</button>
+    <div class="form-group">
+      <label for="task-id-get">Task ID (for search):</label>
+      <input type="number" id="task-id-get" placeholder="Enter task ID" />
+      <button id="get-task-btn">Get Task by ID</button>
+    </div>
+    <ul id="task-list"></ul>
+  </div>
+
+  <script type="module" src="/src/minimal_agent_test.js"></script>
+
 </body>
 
 </html>
