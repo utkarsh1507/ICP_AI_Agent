@@ -3,12 +3,18 @@ type Task = record {
   data : text;
   frequency : nat64;
   last_run : nat64;
+  url : opt text;
+  action_type : text;
+  enabled : bool;
 };
 
 service : {
   init : () -> ();
   create_task : (nat64, text, nat64) -> ();
+  create_task_complete : (nat64, text, nat64, opt text, text) -> ();
+  update_task : (nat64, opt text, opt nat64, opt text, opt text, opt bool) -> ();
   get_tasks : () -> (vec Task) query;
+  get_task : (nat64) -> (opt Task) query;
   delete_task : (nat64) -> ();
   execute_tasks : () -> ();
   retire_agent : () -> ();
