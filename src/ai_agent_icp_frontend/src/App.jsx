@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ai_agent_icp_backend } from '../../declarations/ai_agent_icp_backend';
+import TokenPanel from './components/TokenPanel';
 
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -7,6 +8,7 @@ function App() {
   const [error, setError] = useState(null);
   const [searchId, setSearchId] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('tasks'); // 'tasks' or 'tokens'
 
   // Form state
   const [taskForm, setTaskForm] = useState({
@@ -153,124 +155,145 @@ function App() {
 
   return (
     <div className="container">
-      <h1>ICP Agent Task Manager</h1>
+      <h1>ICP Agent Dashboard</h1>
 
-      {error && <div className="error">{error}</div>}
-      {successMessage && <div className="success">{successMessage}</div>}
-
-      <div className="task-form">
-        <h2>Create New Task</h2>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="id">Task ID:</label>
-            <input
-              type="number"
-              id="id"
-              name="id"
-              value={taskForm.id}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="data">Task Data (JSON/Text):</label>
-            <textarea
-              id="data"
-              name="data"
-              value={taskForm.data}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="frequency">Frequency (seconds):</label>
-            <input
-              type="number"
-              id="frequency"
-              name="frequency"
-              value={taskForm.frequency}
-              onChange={handleChange}
-              required
-              min="1"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="actionType">Action Type:</label>
-            <select
-              id="actionType"
-              name="actionType"
-              value={taskForm.actionType}
-              onChange={handleChange}
-            >
-              <option value="custom">Custom</option>
-              <option value="http_request">HTTP Request</option>
-            </select>
-          </div>
-
-          <button type="submit">Create Task</button>
-        </form>
+      <div className="tabs">
+        <button
+          className={activeTab === 'tasks' ? 'active' : ''}
+          onClick={() => setActiveTab('tasks')}>
+          Task Manager
+        </button>
+        <button
+          className={activeTab === 'tokens' ? 'active' : ''}
+          onClick={() => setActiveTab('tokens')}>
+          Token Management
+        </button>
       </div>
 
-      <div className="task-search">
-        <h2>Search Task</h2>
-        <div className="search-container">
-          <input
-            type="number"
-            placeholder="Enter Task ID"
-            value={searchId}
-            onChange={(e) => setSearchId(e.target.value)}
-          />
-          <button onClick={searchTaskById}>Search</button>
-          <button onClick={resetView}>Show All</button>
+      {activeTab === 'tasks' ? (
+        <div className="tasks-panel">
+          {error && <div className="error">{error}</div>}
+          {successMessage && <div className="success">{successMessage}</div>}
+
+          <div className="task-form">
+            <h2>Create New Task</h2>
+            <form onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="id">Task ID:</label>
+                <input
+                  type="number"
+                  id="id"
+                  name="id"
+                  value={taskForm.id}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="data">Task Data (JSON/Text):</label>
+                <textarea
+                  id="data"
+                  name="data"
+                  value={taskForm.data}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="frequency">Frequency (seconds):</label>
+                <input
+                  type="number"
+                  id="frequency"
+                  name="frequency"
+                  value={taskForm.frequency}
+                  onChange={handleChange}
+                  required
+                  min="1"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="actionType">Action Type:</label>
+                <select
+                  id="actionType"
+                  name="actionType"
+                  value={taskForm.actionType}
+                  onChange={handleChange}
+                >
+                  <option value="custom">Custom</option>
+                  <option value="http_request">HTTP Request</option>
+                </select>
+              </div>
+
+              <button type="submit">Create Task</button>
+            </form>
+          </div>
+
+          <div className="task-search">
+            <h2>Search Task</h2>
+            <div className="search-container">
+              <input
+                type="number"
+                placeholder="Enter Task ID"
+                value={searchId}
+                onChange={(e) => setSearchId(e.target.value)}
+              />
+              <button onClick={searchTaskById}>Search</button>
+              <button onClick={resetView}>Show All</button>
+            </div>
+          </div>
+
+          <div className="task-list">
+            <h2>Scheduled Tasks</h2>
+            <button onClick={executeAllTasks} className="action-button">Execute Due Tasks</button>
+            <button onClick={fetchTasks} className="refresh-button">Refresh Task List</button>
+
+            {loading ? (
+              <p>Loading tasks...</p>
+            ) : tasks.length === 0 ? (
+              <p>No tasks scheduled yet.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Data</th>
+                    <th>Frequency</th>
+                    <th>Last Run</th>
+                    <th>Action Type</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.map(task => (
+                    <tr key={task.id.toString()}>
+                      <td>{task.id.toString()}</td>
+                      <td className="data-cell">{task.data}</td>
+                      <td>{task.frequency.toString()} sec</td>
+                      <td>
+                        {task.last_run.toString() === "0" ? "Never" : new Date(Number(task.last_run) * 1000).toLocaleString()}
+                      </td>
+                      <td>{task.action_type}</td>
+                      <td>{task.enabled ? "Enabled" : "Disabled"}</td>
+                      <td>
+                        <button onClick={() => deleteTask(task.id.toString())} className="delete-button">
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <TokenPanel />
+      )}
 
-      <div className="task-list">
-        <h2>Scheduled Tasks</h2>
-        <button onClick={executeAllTasks} className="action-button">Execute Due Tasks</button>
-        <button onClick={fetchTasks} className="refresh-button">Refresh Task List</button>
-
-        {loading ? (
-          <p>Loading tasks...</p>
-        ) : tasks.length === 0 ? (
-          <p>No tasks scheduled yet.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Data</th>
-                <th>Frequency</th>
-                <th>Last Run</th>
-                <th>Action Type</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.map((task) => (
-                <tr key={task.id.toString()}>
-                  <td>{task.id.toString()}</td>
-                  <td>{task.data}</td>
-                  <td>{task.frequency.toString()} sec</td>
-                  <td>{task.last_run.toString() > 0
-                    ? new Date(Number(task.last_run) * 1000).toLocaleString()
-                    : 'Never'}
-                  </td>
-                  <td>{task.action_type}</td>
-                  <td>{task.enabled ? 'Enabled' : 'Disabled'}</td>
-                  <td>
-                    <button onClick={() => deleteTask(task.id)}>Delete</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
     </div>
   );
 }

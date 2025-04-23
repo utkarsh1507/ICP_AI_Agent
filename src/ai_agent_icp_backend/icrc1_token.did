@@ -1,3 +1,5 @@
+// ICRC-1 Token Interface Definition
+
 type Account = record {
     owner : principal;
     subaccount : opt blob;
@@ -37,29 +39,8 @@ type Transaction = record {
     memo : opt blob;
 };
 
-type Task = record {
-    id : nat64;
-    data : text;
-    frequency : nat64;
-    last_run : nat64;
-    url : opt text;
-    action_type : text;
-    enabled : bool;
-};
-
 service : {
-    // Task functions
-    create_task : (nat64, text, nat64) -> ();
-    create_task_complete : (nat64, text, nat64, opt text, text) -> ();
-    update_task : (nat64, opt text, opt nat64, opt text, opt text, opt bool) -> ();
-    get_tasks : () -> (vec Task) query;
-    get_task : (nat64) -> (opt Task) query;
-    delete_task : (nat64) -> ();
-    execute_tasks : () -> ();
-    retire_agent : () -> ();
-    cycles_available : () -> (nat64) query;
-
-    // Token functions
+    // ICRC-1 Standard Methods
     icrc1_name : () -> (text) query;
     icrc1_symbol : () -> (text) query;
     icrc1_decimals : () -> (nat8) query;
@@ -86,4 +67,4 @@ service : {
     burn : (Account, nat) -> (TransferResult);
     get_transactions : (nat64) -> (vec Transaction) query;
     get_all_accounts : () -> (vec record { Account; nat; }) query;
-}
+}; 

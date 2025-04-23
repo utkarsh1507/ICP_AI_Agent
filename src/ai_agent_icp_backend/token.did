@@ -1,0 +1,42 @@
+// Candid interface definition for ICP AI Agent Token functionality
+
+type Token = record {
+    id : text;
+    owner : principal;
+    created_at : nat64;
+    expires_at : opt nat64;
+    metadata : vec record { text; text; };
+    balance : nat64;
+};
+
+service : {
+    // Token management
+    create_token : (vec record { text; text; }, nat64, opt nat64) -> (text);
+    get_token : (text) -> (opt Token) query;
+    get_user_tokens : (opt principal) -> (vec Token) query;
+    update_token_metadata : (text, vec record { text; text; }) -> (bool);
+    transfer_token : (text, principal, nat64) -> (bool);
+    burn_token : (text) -> (bool);
+    is_token_valid : (text) -> (bool) query;
+    
+    // Agent management functions (original API)
+    create_task : (nat64, text, nat64) -> ();
+    create_task_complete : (nat64, text, nat64, opt text, text) -> ();
+    update_task : (nat64, opt text, opt nat64, opt text, opt text, opt bool) -> ();
+    get_tasks : () -> (vec Task) query;
+    get_task : (nat64) -> (opt Task) query;
+    delete_task : (nat64) -> ();
+    execute_tasks : () -> ();
+    retire_agent : () -> ();
+    cycles_available : () -> (nat64) query;
+};
+
+type Task = record {
+    id : nat64;
+    data : text;
+    frequency : nat64;
+    last_run : nat64;
+    url : opt text;
+    action_type : text;
+    enabled : bool;
+}; 
