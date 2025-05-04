@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::{HashMap, BTreeMap};
 use candid::{Principal, CandidType, Nat};
-
+ 
 // ICRC-1 Standard types
 #[derive(CandidType, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub struct Account {
