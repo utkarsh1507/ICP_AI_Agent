@@ -3,7 +3,12 @@ use ic_cdk_macros::{init, query, update};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::VecDeque;
-use candid::{Principal, CandidType};
+use candid::{Principal, CandidType, Nat};
+use std::str::FromStr;
+use serde_json;
+
+// Import only what we need from token
+use crate::token::{Account, TransferArgs, TransferResult};
 
 #[derive(Clone, Debug, Serialize, Deserialize, CandidType)]
 pub struct Task {
@@ -12,7 +17,7 @@ pub struct Task {
     pub frequency: u64, // seconds
     pub last_run: u64,  // timestamp
     pub url: Option<String>, // Optional URL for HTTP outbound calls
-    pub action_type: String, // Type of action: "http_request", "custom", etc.
+    pub action_type: String, // Type of action: "http_request", "custom", "token", etc.
     pub enabled: bool, // Whether this task is active
 }
 
@@ -26,6 +31,20 @@ pub struct Agent {
 
 thread_local! {
     static AGENT: RefCell<Option<Agent>> = RefCell::new(None);
+}
+
+// Internal counter for task IDs
+thread_local! {
+    static NEXT_TASK_ID: RefCell<u64> = RefCell::new(0);
+}
+
+// Helper to get next task ID
+fn get_next_task_id() -> u64 {
+    NEXT_TASK_ID.with(|id| {
+        let next_id = *id.borrow();
+        *id.borrow_mut() += 1;
+        next_id
+    })
 }
 
 #[init]
@@ -63,8 +82,29 @@ pub fn create_task(id: u64, data: String, frequency: u64) {
 }
 
 #[update]
-pub fn create_task_complete(id: u64, data: String, frequency: u64, url: Option<String>, action_type: String) {
-    print(format!("Creating task with ID: {}, data: {}, frequency: {}, action_type: {}", id, data, frequency, action_type));
+pub fn create_task_complete(id: u64, data: String, frequency: u64, url: Option<String>, action_type: String) -> u64 {
+    let actual_id = if id == 0 {
+        // Auto-generate ID by finding the max ID and adding 1
+        AGENT.with(|a| {
+            ensure_agent_initialized();
+            
+            if let Some(agent) = &*a.borrow() {
+                let max_id = agent.tasks.iter()
+                    .map(|task| task.id)
+                    .max()
+                    .unwrap_or(0);
+                
+                max_id + 1
+            } else {
+                1 // Start with 1 if no tasks exist
+            }
+        })
+    } else {
+        id
+    };
+    
+    print(format!("Creating task with ID: {}, data: {}, frequency: {}, action_type: {}", 
+        actual_id, data, frequency, action_type));
     
     AGENT.with(|a| {
         // Auto-initialize agent if not initialized
@@ -81,13 +121,13 @@ pub fn create_task_complete(id: u64, data: String, frequency: u64, url: Option<S
         
         if let Some(agent) = &mut *a.borrow_mut() {
             // Check for duplicate ID
-            if agent.tasks.iter().any(|t| t.id == id) {
-                print(format!("Task with ID {} already exists", id));
+            if agent.tasks.iter().any(|t| t.id == actual_id) {
+                print(format!("Task with ID {} already exists", actual_id));
                 ic_cdk::trap("Task with this ID already exists");
             }
             
             let task = Task { 
-                id, 
+                id: actual_id, 
                 data, 
                 frequency, 
                 last_run: 0,
@@ -106,6 +146,8 @@ pub fn create_task_complete(id: u64, data: String, frequency: u64, url: Option<S
             ic_cdk::trap("Agent not initialized");
         }
     });
+    
+    actual_id
 }
 
 #[update]
@@ -210,7 +252,204 @@ pub fn delete_task(id: u64) {
     });
 }
 
-// Scheduler: execute due tasks (to be called by heartbeat or manual trigger)
+// Token operations through agent - all functions will create a task record
+
+#[update]
+pub fn create_token_init_task(name: String, symbol: String, decimals: u8, 
+                            description: Option<String>, logo: Option<String>, 
+                            initial_supply: Nat, fee: Nat) -> u64 {
+    print(format!("Creating token initialization task for: {}", name));
+    
+    // Store token parameters in the data field as JSON
+    let data = format!(
+        "{{\"name\":\"{}\",\"symbol\":\"{}\",\"decimals\":{},\"initial_supply\":\"{}\",\"fee\":\"{}\",\"description\":{},\"logo\":{}}}",
+        name, symbol, decimals, initial_supply, fee,
+        description.map_or("null".to_string(), |d| format!("\"{}\"", d)),
+        logo.map_or("null".to_string(), |l| format!("\"{}\"", l))
+    );
+    
+    // Create the task
+    let task_id = create_task_complete(
+        0, // Use 0 to auto-assign ID
+        data,
+        0, // One-time task
+        None,
+        "token_init".to_string()
+    );
+    
+    print(format!("Created token initialization task with ID: {}", task_id));
+    task_id
+}
+
+#[update]
+pub fn create_token_transfer_task(to: Account, amount: Nat, memo: Option<Vec<u8>>) -> u64 {
+    print(format!("Creating token transfer task to: {}", to.owner.to_string()));
+    
+    // Store transfer parameters in the data field as JSON
+    let data = format!(
+        "{{\"to\":\"{}\",\"amount\":\"{}\",\"memo\":\"{}\"}}",
+        to.owner.to_string(),
+        amount.to_string(),
+        memo.as_ref().map_or("".to_string(), |m| String::from_utf8_lossy(m).to_string())
+    );
+    
+    // Create the task
+    let task_id = create_task_complete(
+        0, // Use 0 to auto-assign ID
+        data,
+        0, // One-time task
+        None,
+        "token_transfer".to_string()
+    );
+    
+    print(format!("Created token transfer task with ID: {}", task_id));
+    task_id
+}
+
+#[update]
+pub fn create_token_mint_task(to: Account, amount: Nat) -> u64 {
+    print(format!("Creating token mint task for: {}", to.owner.to_string()));
+    
+    // Store mint parameters in the data field as JSON
+    let data = format!(
+        "{{\"to\":\"{}\",\"amount\":\"{}\"}}",
+        to.owner.to_string(),
+        amount.to_string()
+    );
+    
+    // Create the task
+    let task_id = create_task_complete(
+        0, // Use 0 to auto-assign ID
+        data,
+        0, // One-time task
+        None,
+        "token_mint".to_string()
+    );
+    
+    print(format!("Created token mint task with ID: {}", task_id));
+    task_id
+}
+
+#[update]
+pub fn create_token_burn_task(from: Account, amount: Nat) -> u64 {
+    print(format!("Creating token burn task for: {}", from.owner.to_string()));
+    
+    // Store burn parameters in the data field as JSON
+    let data = format!(
+        "{{\"from\":\"{}\",\"amount\":\"{}\"}}",
+        from.owner.to_string(),
+        amount.to_string()
+    );
+    
+    // Create the task
+    let task_id = create_task_complete(
+        0, // Use 0 to auto-assign ID
+        data,
+        0, // One-time task
+        None,
+        "token_burn".to_string()
+    );
+    
+    print(format!("Created token burn task with ID: {}", task_id));
+    task_id
+}
+
+// Get all tasks of a specific token operation type
+#[query]
+pub fn get_token_tasks_by_type(operation_type: String) -> Vec<Task> {
+    get_tasks_by_type(format!("token_{}", operation_type))
+}
+
+// Helper function to get tasks by type
+#[query]
+pub fn get_tasks_by_type(task_type: String) -> Vec<Task> {
+    AGENT.with(|a| {
+        ensure_agent_initialized();
+        
+        if let Some(agent) = &*a.borrow() {
+            agent.tasks.iter()
+                .filter(|task| task.action_type == task_type)
+                .cloned()
+                .collect()
+        } else {
+            Vec::new()
+        }
+    })
+}
+
+// Token information queries - these don't create tasks
+#[query]
+pub fn token_balance(account: crate::token::Account) -> Nat {
+    crate::token::icrc1_balance_of(account)
+}
+
+#[query]
+pub fn token_metadata() -> Vec<(String, String)> {
+    crate::token::icrc1_metadata()
+}
+
+#[query]
+pub fn token_name() -> String {
+    crate::token::icrc1_name()
+}
+
+#[query]
+pub fn token_symbol() -> String {
+    crate::token::icrc1_symbol()
+}
+
+#[query]
+pub fn token_decimals() -> u8 {
+    crate::token::icrc1_decimals()
+}
+
+#[query]
+pub fn token_total_supply() -> Nat {
+    crate::token::icrc1_total_supply()
+}
+
+#[query]
+pub fn token_fee() -> Nat {
+    crate::token::icrc1_fee()
+}
+
+#[query]
+pub fn token_transactions(limit: u64) -> Vec<crate::token::Transaction> {
+    crate::token::get_transactions(limit)
+}
+
+// Task for scheduling token operations
+#[update]
+pub fn create_token_operation_task(id: u64, operation: String, data: String, frequency: u64) {
+    print(format!("Creating token operation task: {}, operation: {}", id, operation));
+    
+    AGENT.with(|a| {
+        ensure_agent_initialized();
+        
+        if let Some(agent) = &mut *a.borrow_mut() {
+            // Check for duplicate ID
+            if agent.tasks.iter().any(|t| t.id == id) {
+                print(format!("Task with ID {} already exists", id));
+                ic_cdk::trap("Task with this ID already exists");
+            }
+            
+            let task = Task { 
+                id, 
+                data, // Operation parameters as JSON
+                frequency, 
+                last_run: 0,
+                url: None,
+                action_type: format!("token_{}", operation), // "token_transfer", "token_mint", etc.
+                enabled: true,
+            };
+            
+            agent.tasks.push_back(task);
+            print(format!("Token operation task created with ID: {}", id));
+        }
+    });
+}
+
+// Modified execute_tasks to process token operation tasks
 #[update]
 pub fn execute_tasks() {
     let now = time() / 1_000_000_000; // seconds
@@ -223,32 +462,253 @@ pub fn execute_tasks() {
             let mut executed_count = 0;
             
             for task in agent.tasks.iter_mut() {
-                if task.enabled && now >= task.last_run + task.frequency {
-                    // Execute the task (placeholder: just update last_run)
+                if task.enabled && (now >= task.last_run + task.frequency || task.last_run == 0) {
+                    // Keep track of old last_run for logging
                     let old_last_run = task.last_run;
+                    
+                    // Token operations
+                    if task.action_type.starts_with("token_") {
+                        match task.action_type.as_str() {
+                            "token_init" => execute_token_init_task(task),
+                            "token_transfer" => execute_token_transfer_task(task),
+                            "token_mint" => execute_token_mint_task(task),
+                            "token_burn" => execute_token_burn_task(task),
+                            _ => {
+                                print(format!("Unknown token operation: {}", task.action_type));
+                            }
+                        }
+                    } else if task.action_type == "http_request" {
+                        // HTTP request handling
+                        print(format!("HTTP request action for task ID: {}", task.id));
+                        // HTTP outbound calls would go here
+                    } else {
+                        // Custom task handling
+                        print(format!("Custom action for task ID: {}", task.id));
+                        // Custom logic here
+                    }
+                    
+                    // Update last run time
                     task.last_run = now;
                     executed_count += 1;
                     
                     print(format!("Executed task ID: {}, last run updated from {} to {}", 
                            task.id, old_last_run, now));
-                    
-                    // Action type handling
-                    match task.action_type.as_str() {
-                        "http_request" => {
-                            print(format!("HTTP request action for task ID: {}", task.id));
-                            // HTTP outbound calls would go here
-                        },
-                        "custom" | _ => {
-                            print(format!("Custom action for task ID: {}", task.id));
-                            // Custom logic here
-                        }
-                    }
                 }
             }
             
             print(format!("Executed {} tasks out of {}", executed_count, agent.tasks.len()));
         }
     });
+}
+
+// Token task execution helpers
+fn execute_token_init_task(task: &mut Task) {
+    print(format!("Executing token initialization task: {}", task.id));
+    
+    // Parse the JSON from data field
+    match serde_json::from_str::<serde_json::Value>(&task.data) {
+        Ok(json_data) => {
+            let name = json_data["name"].as_str().unwrap_or_default().to_string();
+            let symbol = json_data["symbol"].as_str().unwrap_or_default().to_string();
+            let decimals = json_data["decimals"].as_u64().unwrap_or(8) as u8;
+            
+            let initial_supply_str = json_data["initial_supply"].as_str().unwrap_or("0");
+            let fee_str = json_data["fee"].as_str().unwrap_or("0");
+            
+            let initial_supply = Nat::from(u64::from_str_radix(initial_supply_str, 10).unwrap_or(0));
+            let fee = Nat::from(u64::from_str_radix(fee_str, 10).unwrap_or(0));
+            
+            let description = json_data["description"].as_str().map(|s| s.to_string());
+            let logo = json_data["logo"].as_str().map(|s| s.to_string());
+            
+            // Call the actual token init function
+            let result = crate::token::icrc1_init(
+                name, 
+                symbol, 
+                decimals, 
+                description, 
+                logo, 
+                initial_supply, 
+                fee
+            );
+            
+            // Update task with result
+            let status_update = format!("{{\"status\":\"{}\"}}", if result { "success" } else { "failed" });
+            update_task_data(task, &status_update);
+            
+            print(format!("Token initialization result: {}", result));
+            
+            // Disable the task after execution as it's a one-time operation
+            task.enabled = false;
+        },
+        Err(e) => {
+            print(format!("Failed to parse token initialization data: {}", e));
+            let status_update = format!("{{\"status\":\"failed\",\"error\":\"Parse error: {}\"}}", e);
+            update_task_data(task, &status_update);
+        }
+    }
+}
+
+fn execute_token_transfer_task(task: &mut Task) {
+    print(format!("Executing token transfer task: {}", task.id));
+    
+    match serde_json::from_str::<serde_json::Value>(&task.data) {
+        Ok(json_data) => {
+            if let (Some(to_principal), Some(amount_str)) = (
+                json_data["to"].as_str(), 
+                json_data["amount"].as_str()
+            ) {
+                let to = crate::token::Account {
+                    owner: Principal::from_text(to_principal).unwrap_or(Principal::anonymous()),
+                    subaccount: None,
+                };
+                
+                let amount = Nat::from(u64::from_str_radix(amount_str, 10).unwrap_or(0));
+                let memo = json_data["memo"].as_str().map(|s| s.as_bytes().to_vec());
+                
+                let transfer_args = crate::token::TransferArgs {
+                    from_subaccount: None,
+                    to,
+                    amount,
+                    fee: None,
+                    memo,
+                    created_at_time: Some(time() / 1_000_000_000),
+                };
+                
+                match crate::token::icrc1_transfer(transfer_args) {
+                    crate::token::TransferResult::Ok(tx_id) => {
+                        print(format!("Token transfer successful, tx_id: {}", tx_id));
+                        let status_update = format!("{{\"status\":\"success\",\"tx_id\":\"{}\"}}", tx_id);
+                        update_task_data(task, &status_update);
+                    },
+                    crate::token::TransferResult::Err(err) => {
+                        print(format!("Token transfer failed: {:?}", err));
+                        let status_update = format!("{{\"status\":\"failed\",\"error\":\"{:?}\"}}", err);
+                        update_task_data(task, &status_update);
+                    }
+                }
+                
+                // Task is completed, disable it
+                task.enabled = false;
+            } else {
+                print("Missing required fields for token transfer");
+                let status_update = "{{\"status\":\"failed\",\"error\":\"Missing required fields\"}}";
+                update_task_data(task, status_update);
+            }
+        },
+        Err(e) => {
+            print(format!("Failed to parse token transfer data: {}", e));
+            let status_update = format!("{{\"status\":\"failed\",\"error\":\"Parse error: {}\"}}", e);
+            update_task_data(task, &status_update);
+        }
+    }
+}
+
+fn execute_token_mint_task(task: &mut Task) {
+    print(format!("Executing token mint task: {}", task.id));
+    
+    match serde_json::from_str::<serde_json::Value>(&task.data) {
+        Ok(json_data) => {
+            if let (Some(to_principal), Some(amount_str)) = (
+                json_data["to"].as_str(), 
+                json_data["amount"].as_str()
+            ) {
+                let to = crate::token::Account {
+                    owner: Principal::from_text(to_principal).unwrap_or(Principal::anonymous()),
+                    subaccount: None,
+                };
+                
+                let amount = Nat::from(u64::from_str_radix(amount_str, 10).unwrap_or(0));
+                
+                match crate::token::mint(to, amount) {
+                    crate::token::TransferResult::Ok(tx_id) => {
+                        print(format!("Token minting successful, tx_id: {}", tx_id));
+                        let status_update = format!("{{\"status\":\"success\",\"tx_id\":\"{}\"}}", tx_id);
+                        update_task_data(task, &status_update);
+                    },
+                    crate::token::TransferResult::Err(err) => {
+                        print(format!("Token minting failed: {:?}", err));
+                        let status_update = format!("{{\"status\":\"failed\",\"error\":\"{:?}\"}}", err);
+                        update_task_data(task, &status_update);
+                    }
+                }
+                
+                // Task is completed, disable it
+                task.enabled = false;
+            } else {
+                print("Missing required fields for token minting");
+                let status_update = "{{\"status\":\"failed\",\"error\":\"Missing required fields\"}}";
+                update_task_data(task, status_update);
+            }
+        },
+        Err(e) => {
+            print(format!("Failed to parse token minting data: {}", e));
+            let status_update = format!("{{\"status\":\"failed\",\"error\":\"Parse error: {}\"}}", e);
+            update_task_data(task, &status_update);
+        }
+    }
+}
+
+fn execute_token_burn_task(task: &mut Task) {
+    print(format!("Executing token burn task: {}", task.id));
+    
+    match serde_json::from_str::<serde_json::Value>(&task.data) {
+        Ok(json_data) => {
+            if let (Some(from_principal), Some(amount_str)) = (
+                json_data["from"].as_str(), 
+                json_data["amount"].as_str()
+            ) {
+                let from = crate::token::Account {
+                    owner: Principal::from_text(from_principal).unwrap_or(Principal::anonymous()),
+                    subaccount: None,
+                };
+                
+                let amount = Nat::from(u64::from_str_radix(amount_str, 10).unwrap_or(0));
+                
+                match crate::token::burn(from, amount) {
+                    crate::token::TransferResult::Ok(tx_id) => {
+                        print(format!("Token burning successful, tx_id: {}", tx_id));
+                        let status_update = format!("{{\"status\":\"success\",\"tx_id\":\"{}\"}}", tx_id);
+                        update_task_data(task, &status_update);
+                    },
+                    crate::token::TransferResult::Err(err) => {
+                        print(format!("Token burning failed: {:?}", err));
+                        let status_update = format!("{{\"status\":\"failed\",\"error\":\"{:?}\"}}", err);
+                        update_task_data(task, &status_update);
+                    }
+                }
+                
+                // Task is completed, disable it
+                task.enabled = false;
+            } else {
+                print("Missing required fields for token burning");
+                let status_update = "{{\"status\":\"failed\",\"error\":\"Missing required fields\"}}";
+                update_task_data(task, status_update);
+            }
+        },
+        Err(e) => {
+            print(format!("Failed to parse token burning data: {}", e));
+            let status_update = format!("{{\"status\":\"failed\",\"error\":\"Parse error: {}\"}}", e);
+            update_task_data(task, &status_update);
+        }
+    }
+}
+
+// Helper to update task data
+fn update_task_data(task: &mut Task, status_update: &str) {
+    // Append the status update to existing data
+    let mut data_value: serde_json::Value = serde_json::from_str(&task.data).unwrap_or(serde_json::json!({}));
+    let status_value: serde_json::Value = serde_json::from_str(status_update).unwrap_or(serde_json::json!({}));
+    
+    // Merge the objects
+    if let (Some(data_obj), Some(status_obj)) = (data_value.as_object_mut(), status_value.as_object()) {
+        for (key, value) in status_obj {
+            data_obj.insert(key.clone(), value.clone());
+        }
+    }
+    
+    task.data = data_value.to_string();
+    print(format!("Updated task {} data: {}", task.id, task.data));
 }
 
 // Agent retirement

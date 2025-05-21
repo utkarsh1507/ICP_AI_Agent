@@ -1,0 +1,15 @@
+{
+    "mcpServers": { 
+        "ICP-Token-Server": {
+            "command": "/home/utkarsh1507/.volta/bin/node",
+            "args": [
+                "c:/Users/UTKARSH/Downloads/ICP_AI_Agent/MCP_Server/dist/index.js"
+            ],
+            "env": {
+                "TOKEN_CANISTER_ID": "rrkah-fqaaa-aaaaa-aaaaq-cai",
+                "IC_HOST": "https://ic0.app",
+                "NODE_ENV": "development"
+            }
+        }
+    }
+}

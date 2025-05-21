@@ -19,7 +19,7 @@ struct TransferArgs {
     memo: Option<Vec<u8>>,
     created_at_time: Option<u64>,
 }
-
+       
 #[derive(CandidType, Clone, Debug, Deserialize)]
 enum TransferError {
     BadFee { expected_fee: Nat },

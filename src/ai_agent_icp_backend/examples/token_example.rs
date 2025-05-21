@@ -4,7 +4,7 @@ use ic_cdk::api::call::CallResult;
 use ic_agent::{Agent, Identity};
 use candid::{Principal, Encode, Decode, CandidType, Deserialize};
 use std::collections::HashMap;
-
+      
 #[derive(CandidType, Clone, Deserialize)]
 struct Token {
     id: String,
