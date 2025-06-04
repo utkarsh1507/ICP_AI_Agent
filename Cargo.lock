@@ -9,7 +9,7 @@ dependencies = [
  "candid",
  "ic-cdk",
  "ic-cdk-macros",
- "ic-cdk-timers",
+ "ic-cdk-timers",    
  "serde",
  "serde_json",
 ]
