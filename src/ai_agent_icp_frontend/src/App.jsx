@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Principal } from '@dfinity/principal';
 import { ai_agent_icp_backend } from '../../declarations/ai_agent_icp_backend';
 import TokenPanel from './components/TokenPanel';
 
@@ -8,9 +9,8 @@ function App() {
   const [error, setError] = useState(null);
   const [searchId, setSearchId] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [activeTab, setActiveTab] = useState('tasks'); // 'tasks' or 'tokens'
+  const [activeTab, setActiveTab] = useState('tasks');
 
-  // Form state
   const [taskForm, setTaskForm] = useState({
     id: '',
     data: '',
@@ -18,7 +18,6 @@ function App() {
     actionType: 'custom'
   });
 
-  // Load tasks on component mount
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -49,20 +48,18 @@ function App() {
       setError(null);
       const id = BigInt(searchId);
       const task = await ai_agent_icp_backend.get_task(id);
-
       console.log("Task search result:", task);
 
-      if (task === null || task === undefined) {
+      if (!task.status || task.status.Ok === null) {
         setError(`No task found with ID: ${searchId}`);
         setTasks([]);
       } else {
-        setTasks([task]);
+        setTasks([task.status.Ok]);
         setSuccessMessage(`Found task with ID: ${searchId}`);
-        // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (err) {
-      setError(`Failed to find task: ${err.message}`);
+      setError(`Failed to find task: ${err.message || err}`);
       console.error(err);
     } finally {
       setLoading(false);
@@ -77,46 +74,47 @@ function App() {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const createTask = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
+    setError(null);
     try {
-      setError(null);
-      const id = BigInt(taskForm.id);
-      const frequency = BigInt(taskForm.frequency);
-
-      console.log("Creating task with params:", {
-        id: id.toString(),
-        data: taskForm.data,
-        frequency: frequency.toString(),
-        actionType: taskForm.actionType
-      });
-
-      // Simplify the call - remove the url parameter completely
-      await ai_agent_icp_backend.create_task_complete(
-        id,
-        taskForm.data,
-        frequency,
-        [], // empty array for opt
-        taskForm.actionType
-      );
-
-      // Reset form & refresh task list
-      setTaskForm({
-        id: '',
-        data: '',
-        frequency: 60,
-        actionType: 'custom'
-      });
-
+      let result;
+      if (taskForm.actionType === "token_transfer") {
+        let taskData;
+        try {
+          taskData = JSON.parse(taskForm.data);
+        } catch (jsonErr) {
+          throw new Error(`Invalid JSON in task data: ${jsonErr.message}`);
+        }
+        if (!taskData.to || !taskData.amount) {
+          throw new Error("Task data must include 'to' and 'amount' fields");
+        }
+        const toPrincipal = Principal.fromText(taskData.to);
+        const amount = BigInt(taskData.amount);
+        const memo = taskData.memo ? new TextEncoder().encode(taskData.memo) : null;
+        result = await ai_agent_icp_backend.create_token_transfer_task(
+          { owner: toPrincipal, subaccount: [] },
+          amount,
+          memo ? [memo] : []
+        );
+      } else {
+        result = await ai_agent_icp_backend.create_task(
+          BigInt(taskForm.id || 0),
+          taskForm.data,
+          BigInt(taskForm.frequency),
+          taskForm.actionType
+        );
+      }
       setSuccessMessage("Task created successfully!");
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(''), 3000);
-
-      fetchTasks();
+      setTimeout(() => setSuccessMessage(""), 5000);
+      setTaskForm({ id: "", data: "", frequency: 60, actionType: "custom" });
+      await fetchTasks();
     } catch (err) {
-      setError(`Failed to create task: ${err.message}`);
+      setError(`Failed to create task: ${err.message || err}`);
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -125,7 +123,6 @@ function App() {
       setError(null);
       await ai_agent_icp_backend.delete_task(BigInt(id));
       setSuccessMessage(`Task ${id} deleted successfully!`);
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(''), 3000);
       fetchTasks();
     } catch (err) {
@@ -139,9 +136,8 @@ function App() {
       setError(null);
       await ai_agent_icp_backend.execute_tasks();
       setSuccessMessage("Tasks executed successfully!");
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(''), 3000);
-      fetchTasks(); // Refresh to see updated last_run times
+      fetchTasks();
     } catch (err) {
       setError(`Failed to execute tasks: ${err.message}`);
       console.error(err);
@@ -156,7 +152,6 @@ function App() {
   return (
     <div className="container">
       <h1>ICP Agent Dashboard</h1>
-
       <div className="tabs">
         <button
           className={activeTab === 'tasks' ? 'active' : ''}
@@ -169,29 +164,26 @@ function App() {
           Token Management
         </button>
       </div>
-
       {activeTab === 'tasks' ? (
         <div className="tasks-panel">
           {error && <div className="error">{error}</div>}
           {successMessage && <div className="success">{successMessage}</div>}
-
           <div className="task-form">
             <h2>Create New Task</h2>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={createTask}>
               <div>
-                <label htmlFor="id">Task ID:</label>
+                <label htmlFor="id">Task ID (0 for auto):</label>
                 <input
                   type="number"
                   id="id"
                   name="id"
                   value={taskForm.id}
                   onChange={handleChange}
-                  required
+                  min="0"
                 />
               </div>
-
               <div>
-                <label htmlFor="data">Task Data (JSON/Text):</label>
+                <label htmlFor="data">Task Data (JSON):</label>
                 <textarea
                   id="data"
                   name="data"
@@ -200,7 +192,6 @@ function App() {
                   required
                 />
               </div>
-
               <div>
                 <label htmlFor="frequency">Frequency (seconds):</label>
                 <input
@@ -213,7 +204,6 @@ function App() {
                   min="1"
                 />
               </div>
-
               <div>
                 <label htmlFor="actionType">Action Type:</label>
                 <select
@@ -224,13 +214,14 @@ function App() {
                 >
                   <option value="custom">Custom</option>
                   <option value="http_request">HTTP Request</option>
+                  <option value="token_transfer">Token Transfer</option>
                 </select>
               </div>
-
-              <button type="submit">Create Task</button>
+              <button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "Create Task"}
+              </button>
             </form>
           </div>
-
           <div className="task-search">
             <h2>Search Task</h2>
             <div className="search-container">
@@ -244,12 +235,12 @@ function App() {
               <button onClick={resetView}>Show All</button>
             </div>
           </div>
-
           <div className="task-list">
             <h2>Scheduled Tasks</h2>
-            <button onClick={executeAllTasks} className="action-button">Execute Due Tasks</button>
+            <button onClick={executeAllTasks} className="action-button" disabled={loading}>
+              {loading ? "Executing..." : "Execute Due Tasks"}
+            </button>
             <button onClick={fetchTasks} className="refresh-button">Refresh Task List</button>
-
             {loading ? (
               <p>Loading tasks...</p>
             ) : tasks.length === 0 ? (
@@ -293,7 +284,6 @@ function App() {
       ) : (
         <TokenPanel />
       )}
-
     </div>
   );
 }
