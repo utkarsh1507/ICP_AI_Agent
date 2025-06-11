@@ -5,7 +5,7 @@
             "args": [
                 "/home/snail/ICP_AI_Agent/ICP_AI_Agent/MCP_Server/dist/index.js"
             ],
-            "env": {
+            "env": {    
                 "TOKEN_CANISTER_ID": "uxrrr-q7777-77774-qaaaq-cai",
                 "IC_HOST": "http://localhost:4943",
                 "NODE_ENV": "development"
