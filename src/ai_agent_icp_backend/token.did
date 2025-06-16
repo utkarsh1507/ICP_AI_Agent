@@ -9,6 +9,27 @@ type Token = record {
     balance : nat64;
 };
 
+// Task record used by agent management APIs
+type Task = record {
+    id : nat64;
+    data : text;
+    frequency : nat64;
+    last_run : nat64;
+    url : opt text;
+    action_type : text;
+    enabled : bool;
+};
+
+// ---- Shared Types ----
+
+type TransferError = variant {
+    BadFee : record { expected_fee : nat };
+    BadBurn : record { min_burn_amount : nat };
+    InsufficientFunds : record { balance : nat };
+    InsufficientAllowance : record { allowance : nat };
+    GenericError : record { error_code : nat; message : text };
+};
+
 service : {
     // Token management
     create_token : (vec record { text; text; }, nat64, opt nat64) -> (text);
@@ -29,14 +50,65 @@ service : {
     execute_tasks : () -> ();
     retire_agent : () -> ();
     cycles_available : () -> (nat64) query;
-};
 
-type Task = record {
-    id : nat64;
-    data : text;
-    frequency : nat64;
-    last_run : nat64;
-    url : opt text;
-    action_type : text;
-    enabled : bool;
-}; 
+    // ---- ICRC-2 Token methods ----
+    icrc2_init : (text, text, nat8, opt text, opt text, nat, nat) -> (bool);
+
+    icrc2_mint : (record { owner : principal; subaccount : opt blob }, nat) -> (variant { Ok : nat; Err : TransferError });
+
+    icrc2_transfer : (record {
+        from_subaccount : opt blob;
+        to : record { owner : principal; subaccount : opt blob };
+        amount : nat;
+        fee : opt nat;
+        memo : opt vec nat8;
+        created_at_time : opt nat64;
+    }) -> (variant { Ok : nat; Err : TransferError });
+
+    icrc2_approve : (record {
+        from_subaccount : opt blob;
+        spender : record { owner : principal; subaccount : opt blob };
+        amount : nat;
+        expected_allowance : opt nat;
+        expires_at : opt nat64;
+        fee : opt nat;
+        memo : opt vec nat8;
+        created_at_time : opt nat64;
+    }) -> (variant { Ok : nat; Err : TransferError });
+
+    icrc2_transfer_from : (record {
+        spender_subaccount : opt blob;
+        from : record { owner : principal; subaccount : opt blob };
+        to : record { owner : principal; subaccount : opt blob };
+        amount : nat;
+        fee : opt nat;
+        memo : opt vec nat8;
+        created_at_time : opt nat64;
+    }) -> (variant { Ok : nat; Err : TransferError });
+
+    icrc2_allowance : (record {
+        account : record { owner : principal; subaccount : opt blob };
+        spender : record { owner : principal; subaccount : opt blob };
+    }) -> (nat) query;
+
+    icrc2_balance_of : (record { owner : principal; subaccount : opt blob }) -> (nat) query;
+
+    icrc2_fee : () -> (nat) query;
+    icrc2_total_supply : () -> (nat) query;
+    icrc2_name : () -> (text) query;
+    icrc2_symbol : () -> (text) query;
+    icrc2_decimals : () -> (nat8) query;
+    icrc2_minting_account : () -> (opt record { owner : principal; subaccount : opt blob }) query;
+    icrc2_get_transactions : (nat64) -> (vec record {
+        id : nat64;
+        from : record { owner : principal; subaccount : opt blob };
+        to : record { owner : principal; subaccount : opt blob };
+        amount : nat;
+        timestamp : nat64;
+        memo : opt vec nat8;
+    }) query;
+    icrc2_get_all_accounts : () -> (vec record {
+        account : record { owner : principal; subaccount : opt blob };
+        balance : nat;
+    }) query;
+};
