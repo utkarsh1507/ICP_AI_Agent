@@ -473,7 +473,7 @@ pub fn execute_tasks() {
                             "token_transfer" => execute_token_transfer_task(task),
                             "token_mint" => execute_token_mint_task(task),
                             "token_burn" => execute_token_burn_task(task),
-                            _ => {
+                            _ => {u
                                 print(format!("Unknown token operation: {}", task.action_type));
                             }
                         }
