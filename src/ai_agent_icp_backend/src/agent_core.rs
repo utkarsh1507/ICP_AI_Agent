@@ -473,7 +473,7 @@ pub fn execute_tasks() {
                             "token_transfer" => execute_token_transfer_task(task),
                             "token_mint" => execute_token_mint_task(task),
                             "token_burn" => execute_token_burn_task(task),
-                            _ => {u
+                            _ => {
                                 print(format!("Unknown token operation: {}", task.action_type));
                             }
                         }
@@ -696,6 +696,7 @@ fn execute_token_burn_task(task: &mut Task) {
 
 // Helper to update task data
 fn update_task_data(task: &mut Task, status_update: &str) {
+
     // Append the status update to existing data
     let mut data_value: serde_json::Value = serde_json::from_str(&task.data).unwrap_or(serde_json::json!({}));
     let status_value: serde_json::Value = serde_json::from_str(status_update).unwrap_or(serde_json::json!({}));
@@ -744,6 +745,12 @@ pub fn cycles_available() -> u64 {
 }
 
 // Helper function to ensure agent is initialized
+#[ic_cdk::heartbeat]
+fn heartbeat() {
+    // Periodically execute tasks on the canister heartbeat (called roughly every second)
+    execute_tasks();
+}
+
 fn ensure_agent_initialized() {
     AGENT.with(|a| {
         if a.borrow().is_none() {
