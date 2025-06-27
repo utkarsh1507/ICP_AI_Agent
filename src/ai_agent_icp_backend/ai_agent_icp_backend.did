@@ -50,7 +50,7 @@ type Task = record {
 service : {
     // Task functions
     create_task : (nat64, text, nat64) -> ();
-    create_task_complete : (nat64, text, nat64, opt text, text) -> ();
+    create_task_complete : (nat64, text, nat64, opt text, text) -> (nat64);
     update_task : (nat64, opt text, opt nat64, opt text, opt text, opt bool) -> ();
     get_tasks : () -> (vec Task) query;
     get_task : (nat64) -> (opt Task) query;
@@ -58,6 +58,15 @@ service : {
     execute_tasks : () -> ();
     retire_agent : () -> ();
     cycles_available : () -> (nat64) query;
+
+    // Token task functions
+    create_token_init_task : (text, text, nat8, opt text, opt text, nat, nat) -> (nat64);
+    create_token_transfer_task : (Account, nat, opt vec nat8) -> (nat64);
+    create_token_mint_task : (Account, nat) -> (nat64);
+    create_token_burn_task : (Account, nat) -> (nat64);
+    create_token_operation_task : (nat64, text, text, nat64) -> ();
+    get_token_tasks_by_type : (text) -> (vec Task) query;
+    get_tasks_by_type : (text) -> (vec Task) query;
 
     // Token functions
     icrc1_name : () -> (text) query;
@@ -68,22 +77,14 @@ service : {
     icrc1_minting_account : () -> (opt Account) query;
     icrc1_balance_of : (Account) -> (nat) query;
     icrc1_transfer : (TransferArgs) -> (TransferResult);
-    icrc1_metadata : () -> (vec record { text; text; }) query;
+    icrc1_metadata : () -> (vec record { text; text }) query;
     
     // Token Initialization
-    icrc1_init : (
-        text,     // name
-        text,     // symbol
-        nat8,     // decimals
-        opt text, // description
-        opt text, // logo
-        nat,      // initial_supply
-        nat       // fee
-    ) -> (bool);
+    icrc1_init : (text, text, nat8, opt text, opt text, nat, nat) -> (bool);
     
     // Extended Methods
     mint : (Account, nat) -> (TransferResult);
     burn : (Account, nat) -> (TransferResult);
     get_transactions : (nat64) -> (vec Transaction) query;
-    get_all_accounts : () -> (vec record { Account; nat; }) query;
+    get_all_accounts : () -> (vec record { Account; nat }) query;
 }
