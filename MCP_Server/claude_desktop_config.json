@@ -1,4 +1,4 @@
-<<<<<<< Updated upstream
+
 {
     "mcpServers": { 
         "ICP-Token-Server": {
@@ -14,30 +14,3 @@
         }
     }
 }
-<<<<<<< HEAD
-
-
-=======
-{
-    "mcpServers": { 
-        "ICP-Token-Server": {
-            "command": "node",
-            "args": [
-                "/home/snail/ICP_AI_Agent/ICP_AI_Agent/MCP_Server/dist/index.js"
-            ],
-            "env": {    
-                "TOKEN_CANISTER_ID": "uxrrr-q7777-77774-qaaaq-cai",
-                "IC_HOST": "http://localhost:4943",
-                "NODE_ENV": "development"
-            }
-        }
-    }
-}
->>>>>>> Stashed changes
-=======
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 17edae5 (icrc2 token)
->>>>>>> 408909106f22fe71ee203ce36fdeecf702de0d4d

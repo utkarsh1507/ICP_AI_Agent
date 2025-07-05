@@ -195,8 +195,10 @@ const server = new McpServer(serverInfo);
 
 // Register tools individually using the server.tool() method
 tools.forEach(tool => {
+  console.log(`Registering tool: ${tool.name}`);
   server.tool(tool.name, tool.description, tool.schema.shape, tool.handler);
 });
+
 
 // Set up error handling for uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
@@ -211,7 +213,6 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport();
-
 // Start the server
 console.log('Starting ICP Token MCP Server...');
 try {
