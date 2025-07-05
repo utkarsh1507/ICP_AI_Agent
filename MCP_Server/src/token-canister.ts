@@ -93,6 +93,7 @@ export class TokenCanisterClient implements TokenCanister {
       });
       
       console.log(`TokenCanisterClient initialized for canister: ${canisterId} at host: ${host}`);
+      console.log("Actor created successfully",this.actor);
     } catch (error) {
       console.error('Failed to initialize TokenCanisterClient:', error);
       // Instead of throwing, we'll set the actor to null and handle errors in the methods

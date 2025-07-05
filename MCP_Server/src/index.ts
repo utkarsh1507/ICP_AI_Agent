@@ -199,6 +199,7 @@ const server = new McpServer(serverInfo);
   server.tool(tool.name, tool.description, tool.schema.shape, tool.handler);
 });
 */
+
 server.registerTool(
   "token_get_balance",
   {
@@ -208,15 +209,26 @@ server.registerTool(
     }).shape
   },
   async ({ account }: { account: string }) => {
+    if(!tokenCanister){
+      throw new Error("Token canister client not initialized");
+    }
+    let balance : string;
+    try {
+      balance = await tokenCanister.getBalance(account);
+      console.log(`Balance for account ${account} : ${balance} tokens`);
+    } catch (error) {
+      console.error("Error in token_get_balance:", error);
+      throw error;
+    }
     return {
       content: [
         {
-          type: "text",
-          text: `Mock balance for account ${account}: 1234.56 tokens`
+          type: "text" as const,
+          text: `Balance for account ${account}:${balance} tokens`
         }
       ],
       structuredContent: {
-        balance: "1234.56"
+        balance: {balance}
       }
     };
   }
