@@ -453,13 +453,13 @@ pub fn create_token_operation_task(id: u64, operation: String, data: String, fre
 #[update]
 pub fn execute_tasks() {
     let now = time() / 1_000_000_000; // seconds
-    ic_cdk::api::debug_print(format!("Executing tasks at timestamp: {}", now));
+    //ic_cdk::api::debug_print(format!("Executing tasks at timestamp: {}", now));
     
     ensure_agent_initialized();
     
     AGENT.with(|a| {
         if let Some(agent) = &mut *a.borrow_mut() {
-            let mut executed_count = 0;
+            //let mut executed_count = 0;
             
             for task in agent.tasks.iter_mut() {
                 if task.enabled && (now >= task.last_run + task.frequency || task.last_run == 0) {
@@ -489,14 +489,14 @@ pub fn execute_tasks() {
                     
                     // Update last run time
                     task.last_run = now;
-                    executed_count += 1;
+                    //executed_count += 1;
                     
                     ic_cdk::api::debug_print(format!("Executed task ID: {}, last run updated from {} to {}", 
                            task.id, old_last_run, now));
                 }
             }
             
-            ic_cdk::api::debug_print(format!("Executed {} tasks out of {}", executed_count, agent.tasks.len()));
+            //ic_cdk::api::debug_print(format!("Executed {} tasks out of {}", executed_count, agent.tasks.len()));
         }
     });
 }
