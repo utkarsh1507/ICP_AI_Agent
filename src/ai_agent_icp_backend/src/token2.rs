@@ -1,8 +1,8 @@
-use ic_cdk::api::{caller, time, print};
+use ic_cdk::api::{ debug_print, msg_caller, time};
 use ic_cdk_macros::{query, update};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{HashMap};
 use candid::{Principal, CandidType, Nat};
 
 #[derive(CandidType, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash)]
@@ -139,8 +139,8 @@ pub fn icrc2_init(
     initial_supply: Nat,
     fee: Nat,
 ) -> bool {
-    let caller = caller();
-    print(format!("Initializing ICRC-2 token: {}", name));
+    let caller = msg_caller();
+    debug_print(format!("Initializing ICRC-2 token: {}", name));
     let minting_account = Account {
         owner: caller,
         subaccount: None,
@@ -172,7 +172,7 @@ pub fn icrc2_init(
     TOKEN_STATE.with(|token_state| {
         *token_state.borrow_mut() = Some(state);
     });
-    print(format!("ICRC-2 token initialized successfully with supply: {}", initial_supply));
+    debug_print(format!("ICRC-2 token initialized successfully with supply: {}", initial_supply));
     true
 }
 
@@ -278,7 +278,7 @@ pub fn icrc2_metadata() -> Vec<(String, String)> {
 
 #[update]
 pub fn icrc2_transfer(args: TransferArgs) -> TransferResult {
-    let caller_principal = caller();
+    let caller_principal = msg_caller();
     TOKEN_STATE.with(|token_state| {
         if let Some(state) = &mut *token_state.borrow_mut() {
             let from_account = Account {
@@ -311,7 +311,7 @@ pub fn icrc2_transfer(args: TransferArgs) -> TransferResult {
                 memo: args.memo.clone(),
             };
             state.transactions.push(transaction);
-            print(format!("Transferred {} tokens from {} to {}", args.amount, from_account.owner.to_string(), args.to.owner.to_string()));
+            debug_print(format!("Transferred {} tokens from {} to {}", args.amount, from_account.owner.to_string(), args.to.owner.to_string()));
             TransferResult::Ok(Nat::from(tx_id))
         } else {
             ic_cdk::trap("Token not initialized");
@@ -321,7 +321,7 @@ pub fn icrc2_transfer(args: TransferArgs) -> TransferResult {
 
 #[update]
 pub fn icrc2_mint(to: Account, amount: Nat) -> TransferResult {
-    let caller_principal = caller();
+    let caller_principal = msg_caller();
     TOKEN_STATE.with(|token_state| {
         if let Some(state) = &mut *token_state.borrow_mut() {
             if state.minting_account.owner != caller_principal {
@@ -346,7 +346,7 @@ pub fn icrc2_mint(to: Account, amount: Nat) -> TransferResult {
                 memo: None,
             };
             state.transactions.push(transaction);
-            print(format!("Minted {} tokens to {}", amount, to.owner.to_string()));
+            debug_print(format!("Minted {} tokens to {}", amount, to.owner.to_string()));
             TransferResult::Ok(Nat::from(tx_id))
         } else {
             ic_cdk::trap("Token not initialized");
@@ -357,7 +357,7 @@ pub fn icrc2_mint(to: Account, amount: Nat) -> TransferResult {
 // ICRC2-specific methods
 #[update]
 pub fn icrc2_approve(args: ApproveArgs) -> TransferResult {
-    let caller_principal = caller();
+    let caller_principal = msg_caller();
     TOKEN_STATE.with(|token_state| {
         if let Some(state) = &mut *token_state.borrow_mut() {
             let owner_account = Account {
@@ -374,7 +374,7 @@ pub fn icrc2_approve(args: ApproveArgs) -> TransferResult {
                 }
             }
             state.allowances.insert((owner_account.clone(), args.spender.clone()), args.amount.clone());
-            print(format!("Approved {} tokens for {} by {}", args.amount, args.spender.owner.to_string(), owner_account.owner.to_string()));
+            debug_print(format!("Approved {} tokens for {} by {}", args.amount, args.spender.owner.to_string(), owner_account.owner.to_string()));
             TransferResult::Ok(Nat::from(0u64))
         } else {
             ic_cdk::trap("Token not initialized");
@@ -395,7 +395,7 @@ pub fn icrc2_allowance(args: AllowanceArgs) -> Nat {
 
 #[update]
 pub fn icrc2_transfer_from(args: TransferFromArgs) -> TransferResult {
-    let caller_principal = caller();
+    let caller_principal = msg_caller();
     TOKEN_STATE.with(|token_state| {
         if let Some(state) = &mut *token_state.borrow_mut() {
             let spender_account = Account {
@@ -432,7 +432,7 @@ pub fn icrc2_transfer_from(args: TransferFromArgs) -> TransferResult {
                 memo: args.memo.clone(),
             };
             state.transactions.push(transaction);
-            print(format!("TransferFrom: {} tokens from {} to {} by {}", args.amount, args.from.owner.to_string(), args.to.owner.to_string(), spender_account.owner.to_string()));
+            debug_print(format!("TransferFrom: {} tokens from {} to {} by {}", args.amount, args.from.owner.to_string(), args.to.owner.to_string(), spender_account.owner.to_string()));
             TransferResult::Ok(Nat::from(tx_id))
         } else {
             ic_cdk::trap("Token not initialized");
