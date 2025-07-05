@@ -1,14 +1,14 @@
-use ic_cdk::api::{caller, time, print};
+use ic_cdk::api::{ msg_caller, time};
 use ic_cdk_macros::{init, query, update};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use candid::{Principal, CandidType, Nat};
-use std::str::FromStr;   
+ 
 use serde_json;
    
 // Import only what we need from token
-use crate::token::{Account, TransferArgs, TransferResult};
+use crate::token::{Account};
 
 #[derive(Clone, Debug, Serialize, Deserialize, CandidType)]
 pub struct Task {
@@ -39,24 +39,24 @@ thread_local! {
 }
 
 // Helper to get next task ID
-fn get_next_task_id() -> u64 {
+/*fn get_next_task_id() -> u64 {
     NEXT_TASK_ID.with(|id| {
         let next_id = *id.borrow();
         *id.borrow_mut() += 1;
         next_id
     })
-}
+}*/
 
 #[init]
 pub fn init() {
     let agent = Agent {
-        owner: caller(),
+        owner: ic_cdk::api::msg_caller(),
         tasks: VecDeque::new(),
         active: true,
         created_at: time() / 1_000_000_000,
     };
     AGENT.with(|a| *a.borrow_mut() = Some(agent));
-    print(format!("Agent initialized with owner: {}", caller().to_string()));
+    ic_cdk::api::debug_print(format!("Agent initialized with owner: {}", ic_cdk::api::msg_caller().to_string()));
 }
 
 #[update]
@@ -76,7 +76,7 @@ pub fn create_task(id: u64, data: String, frequency: u64) {
                 action_type: "custom".to_string(),
                 enabled: true 
             });
-            print(format!("Task created with ID: {}", id));
+            ic_cdk::api::debug_print(format!("Task created with ID: {}", id));
         }
     });
 }
@@ -103,26 +103,26 @@ pub fn create_task_complete(id: u64, data: String, frequency: u64, url: Option<S
         id
     };
     
-    print(format!("Creating task with ID: {}, data: {}, frequency: {}, action_type: {}", 
+    ic_cdk::api::debug_print(format!("Creating task with ID: {}, data: {}, frequency: {}, action_type: {}", 
         actual_id, data, frequency, action_type));
     
     AGENT.with(|a| {
         // Auto-initialize agent if not initialized
         if a.borrow().is_none() {
             let new_agent = Agent {
-                owner: caller(),
+                owner: ic_cdk::api::msg_caller(),
                 tasks: VecDeque::new(),
                 active: true,
                 created_at: time() / 1_000_000_000,
             };
             *a.borrow_mut() = Some(new_agent);
-            print(format!("Agent auto-initialized with owner: {}", caller().to_string()));
+            ic_cdk::api::debug_print(format!("Agent auto-initialized with owner: {}", ic_cdk::api::msg_caller().to_string()));
         }
         
         if let Some(agent) = &mut *a.borrow_mut() {
             // Check for duplicate ID
             if agent.tasks.iter().any(|t| t.id == actual_id) {
-                print(format!("Task with ID {} already exists", actual_id));
+                ic_cdk::api::debug_print(format!("Task with ID {} already exists", actual_id));
                 ic_cdk::trap("Task with this ID already exists");
             }
             
@@ -137,12 +137,12 @@ pub fn create_task_complete(id: u64, data: String, frequency: u64, url: Option<S
             };
             
             agent.tasks.push_back(task.clone());
-            print(format!("Task created successfully: {:?}", task));
+            ic_cdk::api::debug_print(format!("Task created successfully: {:?}", task));
             
             // Debug log the current task count
-            print(format!("Current task count: {}", agent.tasks.len()));
+            ic_cdk::api::debug_print(format!("Current task count: {}", agent.tasks.len()));
         } else {
-            print("Agent not initialized");
+            ic_cdk::api::debug_print("Agent not initialized");
             ic_cdk::trap("Agent not initialized");
         }
     });
@@ -171,7 +171,7 @@ pub fn update_task(id: u64, data: Option<String>, frequency: Option<u64>, url: O
                     if let Some(enabled_val) = enabled {
                         task.enabled = enabled_val;
                     }
-                    print(format!("Task updated with ID: {}", id));
+                    ic_cdk::api::debug_print(format!("Task updated with ID: {}", id));
                     return;
                 }
             }
@@ -186,32 +186,32 @@ pub fn get_tasks() -> Vec<Task> {
         // Auto-initialize agent if not initialized
         if a.borrow().is_none() {
             let new_agent = Agent {
-                owner: caller(),
+                owner: ic_cdk::api::msg_caller(),
                 tasks: VecDeque::new(),
                 active: true,
                 created_at: time() / 1_000_000_000,
             };
             *a.borrow_mut() = Some(new_agent);
-            print(format!("Agent auto-initialized with owner: {}", caller().to_string()));
+            ic_cdk::api::debug_print(format!("Agent auto-initialized with owner: {}", ic_cdk::api::msg_caller().to_string()));
         }
         
         let tasks = a.borrow()
             .as_ref()
             .map(|agent| {
                 let tasks: Vec<Task> = agent.tasks.iter().cloned().collect();
-                print(format!("Fetched {} tasks", tasks.len()));
+                ic_cdk::api::debug_print(format!("Fetched {} tasks", tasks.len()));
                 tasks
             })
             .unwrap_or_default();
         
-        print(format!("Returning {} tasks", tasks.len()));
+        ic_cdk::api::debug_print(format!("Returning {} tasks", tasks.len()));
         tasks
     })
 }
 
 #[query]
 pub fn get_task(id: u64) -> Option<Task> {
-    print(format!("Looking for task with ID: {}", id));
+    ic_cdk::api::debug_print(format!("Looking for task with ID: {}", id));
     
     ensure_agent_initialized();
     
@@ -221,9 +221,9 @@ pub fn get_task(id: u64) -> Option<Task> {
             .and_then(|agent| {
                 let found = agent.tasks.iter().find(|task| task.id == id).cloned();
                 if found.is_some() {
-                    print(format!("Found task with ID: {}", id));
+                    ic_cdk::api::debug_print(format!("Found task with ID: {}", id));
                 } else {
-                    print(format!("No task found with ID: {}", id));
+                    ic_cdk::api::debug_print(format!("No task found with ID: {}", id));
                 }
                 found
             });
@@ -234,7 +234,7 @@ pub fn get_task(id: u64) -> Option<Task> {
 
 #[update]
 pub fn delete_task(id: u64) {
-    print(format!("Attempting to delete task with ID: {}", id));
+    ic_cdk::api::debug_print(format!("Attempting to delete task with ID: {}", id));
     
     ensure_agent_initialized();
     
@@ -243,10 +243,10 @@ pub fn delete_task(id: u64) {
             let original_len = agent.tasks.len();
             agent.tasks.retain(|task| task.id != id);
             if agent.tasks.len() == original_len {
-                print(format!("Task with ID {} not found", id));
+                ic_cdk::api::debug_print(format!("Task with ID {} not found", id));
                 ic_cdk::trap("Task not found");
             } else {
-                print(format!("Task with ID {} deleted successfully", id));
+                ic_cdk::api::debug_print(format!("Task with ID {} deleted successfully", id));
             }
         }
     });
@@ -258,7 +258,7 @@ pub fn delete_task(id: u64) {
 pub fn create_token_init_task(name: String, symbol: String, decimals: u8, 
                             description: Option<String>, logo: Option<String>, 
                             initial_supply: Nat, fee: Nat) -> u64 {
-    print(format!("Creating token initialization task for: {}", name));
+    ic_cdk::api::debug_print(format!("Creating token initialization task for: {}", name));
     
     // Store token parameters in the data field as JSON
     let data = format!(
@@ -277,13 +277,13 @@ pub fn create_token_init_task(name: String, symbol: String, decimals: u8,
         "token_init".to_string()
     );
     
-    print(format!("Created token initialization task with ID: {}", task_id));
+    ic_cdk::api::debug_print(format!("Created token initialization task with ID: {}", task_id));
     task_id
 }
 
 #[update]
 pub fn create_token_transfer_task(to: Account, amount: Nat, memo: Option<Vec<u8>>) -> u64 {
-    print(format!("Creating token transfer task to: {}", to.owner.to_string()));
+    ic_cdk::api::debug_print(format!("Creating token transfer task to: {}", to.owner.to_string()));
     
     // Store transfer parameters in the data field as JSON
     let data = format!(
@@ -302,13 +302,13 @@ pub fn create_token_transfer_task(to: Account, amount: Nat, memo: Option<Vec<u8>
         "token_transfer".to_string()
     );
     
-    print(format!("Created token transfer task with ID: {}", task_id));
+    ic_cdk::api::debug_print(format!("Created token transfer task with ID: {}", task_id));
     task_id
 }
 
 #[update]
 pub fn create_token_mint_task(to: Account, amount: Nat) -> u64 {
-    print(format!("Creating token mint task for: {}", to.owner.to_string()));
+    ic_cdk::api::debug_print(format!("Creating token mint task for: {}", to.owner.to_string()));
     
     // Store mint parameters in the data field as JSON
     let data = format!(
@@ -326,13 +326,13 @@ pub fn create_token_mint_task(to: Account, amount: Nat) -> u64 {
         "token_mint".to_string()
     );
     
-    print(format!("Created token mint task with ID: {}", task_id));
+    ic_cdk::api::debug_print(format!("Created token mint task with ID: {}", task_id));
     task_id
 }
 
 #[update]
 pub fn create_token_burn_task(from: Account, amount: Nat) -> u64 {
-    print(format!("Creating token burn task for: {}", from.owner.to_string()));
+    ic_cdk::api::debug_print(format!("Creating token burn task for: {}", from.owner.to_string()));
     
     // Store burn parameters in the data field as JSON
     let data = format!(
@@ -350,7 +350,7 @@ pub fn create_token_burn_task(from: Account, amount: Nat) -> u64 {
         "token_burn".to_string()
     );
     
-    print(format!("Created token burn task with ID: {}", task_id));
+    ic_cdk::api::debug_print(format!("Created token burn task with ID: {}", task_id));
     task_id
 }
 
@@ -421,7 +421,7 @@ pub fn token_transactions(limit: u64) -> Vec<crate::token::Transaction> {
 // Task for scheduling token operations
 #[update]
 pub fn create_token_operation_task(id: u64, operation: String, data: String, frequency: u64) {
-    print(format!("Creating token operation task: {}, operation: {}", id, operation));
+    ic_cdk::api::debug_print(format!("Creating token operation task: {}, operation: {}", id, operation));
     
     AGENT.with(|a| {
         ensure_agent_initialized();
@@ -429,7 +429,7 @@ pub fn create_token_operation_task(id: u64, operation: String, data: String, fre
         if let Some(agent) = &mut *a.borrow_mut() {
             // Check for duplicate ID
             if agent.tasks.iter().any(|t| t.id == id) {
-                print(format!("Task with ID {} already exists", id));
+                ic_cdk::api::debug_print(format!("Task with ID {} already exists", id));
                 ic_cdk::trap("Task with this ID already exists");
             }
             
@@ -444,7 +444,7 @@ pub fn create_token_operation_task(id: u64, operation: String, data: String, fre
             };
             
             agent.tasks.push_back(task);
-            print(format!("Token operation task created with ID: {}", id));
+            ic_cdk::api::debug_print(format!("Token operation task created with ID: {}", id));
         }
     });
 }
@@ -453,7 +453,7 @@ pub fn create_token_operation_task(id: u64, operation: String, data: String, fre
 #[update]
 pub fn execute_tasks() {
     let now = time() / 1_000_000_000; // seconds
-    print(format!("Executing tasks at timestamp: {}", now));
+    ic_cdk::api::debug_print(format!("Executing tasks at timestamp: {}", now));
     
     ensure_agent_initialized();
     
@@ -473,17 +473,17 @@ pub fn execute_tasks() {
                             "token_transfer" => execute_token_transfer_task(task),
                             "token_mint" => execute_token_mint_task(task),
                             "token_burn" => execute_token_burn_task(task),
-                            _ => {u
-                                print(format!("Unknown token operation: {}", task.action_type));
+                            _ => {
+                                ic_cdk::api::debug_print(format!("Unknown token operation: {}", task.action_type));
                             }
                         }
                     } else if task.action_type == "http_request" {
                         // HTTP request handling
-                        print(format!("HTTP request action for task ID: {}", task.id));
+                        ic_cdk::api::debug_print(format!("HTTP request action for task ID: {}", task.id));
                         // HTTP outbound calls would go here
                     } else {
                         // Custom task handling
-                        print(format!("Custom action for task ID: {}", task.id));
+                        ic_cdk::api::debug_print(format!("Custom action for task ID: {}", task.id));
                         // Custom logic here
                     }
                     
@@ -491,19 +491,19 @@ pub fn execute_tasks() {
                     task.last_run = now;
                     executed_count += 1;
                     
-                    print(format!("Executed task ID: {}, last run updated from {} to {}", 
+                    ic_cdk::api::debug_print(format!("Executed task ID: {}, last run updated from {} to {}", 
                            task.id, old_last_run, now));
                 }
             }
             
-            print(format!("Executed {} tasks out of {}", executed_count, agent.tasks.len()));
+            ic_cdk::api::debug_print(format!("Executed {} tasks out of {}", executed_count, agent.tasks.len()));
         }
     });
 }
 
 // Token task execution helpers
 fn execute_token_init_task(task: &mut Task) {
-    print(format!("Executing token initialization task: {}", task.id));
+    ic_cdk::api::debug_print(format!("Executing token initialization task: {}", task.id));
     
     // Parse the JSON from data field
     match serde_json::from_str::<serde_json::Value>(&task.data) {
@@ -536,13 +536,13 @@ fn execute_token_init_task(task: &mut Task) {
             let status_update = format!("{{\"status\":\"{}\"}}", if result { "success" } else { "failed" });
             update_task_data(task, &status_update);
             
-            print(format!("Token initialization result: {}", result));
+            ic_cdk::api::debug_print(format!("Token initialization result: {}", result));
             
             // Disable the task after execution as it's a one-time operation
             task.enabled = false;
         },
         Err(e) => {
-            print(format!("Failed to parse token initialization data: {}", e));
+            ic_cdk::api::debug_print(format!("Failed to parse token initialization data: {}", e));
             let status_update = format!("{{\"status\":\"failed\",\"error\":\"Parse error: {}\"}}", e);
             update_task_data(task, &status_update);
         }
@@ -550,7 +550,7 @@ fn execute_token_init_task(task: &mut Task) {
 }
 
 fn execute_token_transfer_task(task: &mut Task) {
-    print(format!("Executing token transfer task: {}", task.id));
+    ic_cdk::api::debug_print(format!("Executing token transfer task: {}", task.id));
     
     match serde_json::from_str::<serde_json::Value>(&task.data) {
         Ok(json_data) => {
@@ -577,12 +577,12 @@ fn execute_token_transfer_task(task: &mut Task) {
                 
                 match crate::token::icrc1_transfer(transfer_args) {
                     crate::token::TransferResult::Ok(tx_id) => {
-                        print(format!("Token transfer successful, tx_id: {}", tx_id));
+                        ic_cdk::api::debug_print(format!("Token transfer successful, tx_id: {}", tx_id));
                         let status_update = format!("{{\"status\":\"success\",\"tx_id\":\"{}\"}}", tx_id);
                         update_task_data(task, &status_update);
                     },
                     crate::token::TransferResult::Err(err) => {
-                        print(format!("Token transfer failed: {:?}", err));
+                        ic_cdk::api::debug_print(format!("Token transfer failed: {:?}", err));
                         let status_update = format!("{{\"status\":\"failed\",\"error\":\"{:?}\"}}", err);
                         update_task_data(task, &status_update);
                     }
@@ -591,13 +591,13 @@ fn execute_token_transfer_task(task: &mut Task) {
                 // Task is completed, disable it
                 task.enabled = false;
             } else {
-                print("Missing required fields for token transfer");
+                ic_cdk::api::debug_print("Missing required fields for token transfer");
                 let status_update = "{{\"status\":\"failed\",\"error\":\"Missing required fields\"}}";
                 update_task_data(task, status_update);
             }
         },
         Err(e) => {
-            print(format!("Failed to parse token transfer data: {}", e));
+            ic_cdk::api::debug_print(format!("Failed to parse token transfer data: {}", e));
             let status_update = format!("{{\"status\":\"failed\",\"error\":\"Parse error: {}\"}}", e);
             update_task_data(task, &status_update);
         }
@@ -605,7 +605,7 @@ fn execute_token_transfer_task(task: &mut Task) {
 }
 
 fn execute_token_mint_task(task: &mut Task) {
-    print(format!("Executing token mint task: {}", task.id));
+    ic_cdk::api::debug_print(format!("Executing token mint task: {}", task.id));
     
     match serde_json::from_str::<serde_json::Value>(&task.data) {
         Ok(json_data) => {
@@ -622,12 +622,12 @@ fn execute_token_mint_task(task: &mut Task) {
                 
                 match crate::token::mint(to, amount) {
                     crate::token::TransferResult::Ok(tx_id) => {
-                        print(format!("Token minting successful, tx_id: {}", tx_id));
+                        ic_cdk::api::debug_print(format!("Token minting successful, tx_id: {}", tx_id));
                         let status_update = format!("{{\"status\":\"success\",\"tx_id\":\"{}\"}}", tx_id);
                         update_task_data(task, &status_update);
                     },
                     crate::token::TransferResult::Err(err) => {
-                        print(format!("Token minting failed: {:?}", err));
+                        ic_cdk::api::debug_print(format!("Token minting failed: {:?}", err));
                         let status_update = format!("{{\"status\":\"failed\",\"error\":\"{:?}\"}}", err);
                         update_task_data(task, &status_update);
                     }
@@ -636,13 +636,13 @@ fn execute_token_mint_task(task: &mut Task) {
                 // Task is completed, disable it
                 task.enabled = false;
             } else {
-                print("Missing required fields for token minting");
+                ic_cdk::api::debug_print("Missing required fields for token minting");
                 let status_update = "{{\"status\":\"failed\",\"error\":\"Missing required fields\"}}";
                 update_task_data(task, status_update);
             }
         },
         Err(e) => {
-            print(format!("Failed to parse token minting data: {}", e));
+            ic_cdk::api::debug_print(format!("Failed to parse token minting data: {}", e));
             let status_update = format!("{{\"status\":\"failed\",\"error\":\"Parse error: {}\"}}", e);
             update_task_data(task, &status_update);
         }
@@ -650,7 +650,7 @@ fn execute_token_mint_task(task: &mut Task) {
 }
 
 fn execute_token_burn_task(task: &mut Task) {
-    print(format!("Executing token burn task: {}", task.id));
+    ic_cdk::api::debug_print(format!("Executing token burn task: {}", task.id));
     
     match serde_json::from_str::<serde_json::Value>(&task.data) {
         Ok(json_data) => {
@@ -667,12 +667,12 @@ fn execute_token_burn_task(task: &mut Task) {
                 
                 match crate::token::burn(from, amount) {
                     crate::token::TransferResult::Ok(tx_id) => {
-                        print(format!("Token burning successful, tx_id: {}", tx_id));
+                        ic_cdk::api::debug_print(format!("Token burning successful, tx_id: {}", tx_id));
                         let status_update = format!("{{\"status\":\"success\",\"tx_id\":\"{}\"}}", tx_id);
                         update_task_data(task, &status_update);
                     },
                     crate::token::TransferResult::Err(err) => {
-                        print(format!("Token burning failed: {:?}", err));
+                        ic_cdk::api::debug_print(format!("Token burning failed: {:?}", err));
                         let status_update = format!("{{\"status\":\"failed\",\"error\":\"{:?}\"}}", err);
                         update_task_data(task, &status_update);
                     }
@@ -681,13 +681,13 @@ fn execute_token_burn_task(task: &mut Task) {
                 // Task is completed, disable it
                 task.enabled = false;
             } else {
-                print("Missing required fields for token burning");
+                ic_cdk::api::debug_print("Missing required fields for token burning");
                 let status_update = "{{\"status\":\"failed\",\"error\":\"Missing required fields\"}}";
                 update_task_data(task, status_update);
             }
         },
         Err(e) => {
-            print(format!("Failed to parse token burning data: {}", e));
+            ic_cdk::api::debug_print(format!("Failed to parse token burning data: {}", e));
             let status_update = format!("{{\"status\":\"failed\",\"error\":\"Parse error: {}\"}}", e);
             update_task_data(task, &status_update);
         }
@@ -709,7 +709,7 @@ fn update_task_data(task: &mut Task, status_update: &str) {
     }
     
     task.data = data_value.to_string();
-    print(format!("Updated task {} data: {}", task.id, task.data));
+    ic_cdk::api::debug_print(format!("Updated task {} data: {}", task.id, task.data));
 }
 
 // Agent retirement
@@ -717,20 +717,20 @@ fn update_task_data(task: &mut Task, status_update: &str) {
 pub fn retire_agent() {
     assert_owner();
     AGENT.with(|a| *a.borrow_mut() = None);
-    print("Agent retired");
+    ic_cdk::api::debug_print("Agent retired");
 }
 
 // Permissions: only owner can mutate
 fn assert_owner() {
     AGENT.with(|a| {
         if let Some(agent) = &*a.borrow() {
-            if agent.owner != caller() {
-                print(format!("Authorization failed: {} is not the owner {}", 
-                      caller().to_string(), agent.owner.to_string()));
+            if agent.owner != ic_cdk::api::msg_caller() {
+                ic_cdk::api::debug_print(format!("Authorization failed: {} is not the owner {}", 
+                      ic_cdk::api::msg_caller().to_string(), agent.owner.to_string()));
                 ic_cdk::trap("Not authorized");
             }
         } else {
-            print("Agent not initialized");
+            ic_cdk::api::debug_print("Agent not initialized");
             ic_cdk::trap("Agent not initialized");
         }
     });
@@ -738,9 +738,9 @@ fn assert_owner() {
 
 // Cycle management (placeholder, as cycles API is limited from Rust)
 #[query]
-pub fn cycles_available() -> u64 {
-    let cycles = ic_cdk::api::canister_balance();
-    print(format!("Available cycles: {}", cycles));
+pub fn cycles_available() -> u128 {
+    let cycles = ic_cdk::api::canister_cycle_balance();
+    ic_cdk::api::debug_print(format!("Available cycles: {}", cycles));
     cycles
 }
 
@@ -755,13 +755,13 @@ fn ensure_agent_initialized() {
     AGENT.with(|a| {
         if a.borrow().is_none() {
             let new_agent = Agent {
-                owner: caller(),
+                owner: msg_caller(),
                 tasks: VecDeque::new(),
                 active: true,
                 created_at: time() / 1_000_000_000,
             };
             *a.borrow_mut() = Some(new_agent);
-            print(format!("Agent auto-initialized with owner: {}", caller().to_string()));
+            ic_cdk::api::debug_print(format!("Agent auto-initialized with owner: {}", msg_caller().to_string()));
         }
     });
 }

@@ -1,4 +1,4 @@
-use ic_cdk::api::{caller, time, print};
+use ic_cdk::api::{ debug_print, msg_caller, time};
 use ic_cdk_macros::{query, update};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
@@ -111,8 +111,8 @@ pub fn icrc1_init(
     initial_supply: Nat,
     fee: Nat,
 ) -> bool {
-    let caller = caller();
-    print(format!("Initializing ICRC-1 token: {}", name));
+    let caller = msg_caller();
+    debug_print(format!("Initializing ICRC-1 token: {}", name));
     
     let minting_account = Account {
         owner: caller,
@@ -150,7 +150,7 @@ pub fn icrc1_init(
         *token_state.borrow_mut() = Some(state);
     });
     
-    print(format!("ICRC-1 token initialized successfully with supply: {}", initial_supply));
+    debug_print(format!("ICRC-1 token initialized successfully with supply: {}", initial_supply));
     true
 }
 
@@ -260,7 +260,7 @@ pub fn icrc1_metadata() -> Vec<(String, String)> {
 
 #[update]
 pub fn icrc1_transfer(args: TransferArgs) -> TransferResult {
-    let caller_principal = caller();
+    let caller_principal = msg_caller();
     let from = Account {
         owner: caller_principal,
         subaccount: args.from_subaccount,
@@ -325,7 +325,7 @@ pub fn icrc1_transfer(args: TransferArgs) -> TransferResult {
             
             state.transactions.push(transaction);
             
-            print(format!("Transfer completed: {} tokens from {} to {}", 
+            debug_print(format!("Transfer completed: {} tokens from {} to {}", 
                 args.amount, from.owner.to_string(), args.to.owner.to_string()));
             
             TransferResult::Ok(Nat::from(tx_id))
@@ -339,7 +339,7 @@ pub fn icrc1_transfer(args: TransferArgs) -> TransferResult {
 
 #[update]
 pub fn mint(to: Account, amount: Nat) -> TransferResult {
-    let caller_principal = caller();
+    let caller_principal = msg_caller();
     
     TOKEN_STATE.with(|token_state| {
         if let Some(state) = &mut *token_state.borrow_mut() {
@@ -375,7 +375,7 @@ pub fn mint(to: Account, amount: Nat) -> TransferResult {
             
             state.transactions.push(transaction);
             
-            print(format!("Minted {} tokens to {}", amount, to.owner.to_string()));
+            debug_print(format!("Minted {} tokens to {}", amount, to.owner.to_string()));
             
             TransferResult::Ok(Nat::from(tx_id))
         } else {
@@ -386,7 +386,7 @@ pub fn mint(to: Account, amount: Nat) -> TransferResult {
 
 #[update]
 pub fn burn(from: Account, amount: Nat) -> TransferResult {
-    let caller_principal = caller();
+    let caller_principal = msg_caller();
     
     TOKEN_STATE.with(|token_state| {
         if let Some(state) = &mut *token_state.borrow_mut() {
@@ -430,7 +430,7 @@ pub fn burn(from: Account, amount: Nat) -> TransferResult {
             
             state.transactions.push(transaction);
             
-            print(format!("Burned {} tokens from {}", amount, from.owner.to_string()));
+            debug_print(format!("Burned {} tokens from {}", amount, from.owner.to_string()));
             
             TransferResult::Ok(Nat::from(tx_id))
         } else {
