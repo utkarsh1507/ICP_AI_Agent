@@ -194,11 +194,33 @@ const serverInfo = {
 const server = new McpServer(serverInfo);
 
 // Register tools individually using the server.tool() method
-tools.forEach(tool => {
+/*tools.forEach(tool => {
   console.log(`Registering tool: ${tool.name}`);
   server.tool(tool.name, tool.description, tool.schema.shape, tool.handler);
 });
-
+*/
+server.registerTool(
+  "token_get_balance",
+  {
+    description: "Get the token balance for a given account ID",
+    inputSchema: z.object({
+      account: z.string().describe("The account ID to check balance for")
+    }).shape
+  },
+  async ({ account }: { account: string }) => {
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Mock balance for account ${account}: 1234.56 tokens`
+        }
+      ],
+      structuredContent: {
+        balance: "1234.56"
+      }
+    };
+  }
+);
 
 // Set up error handling for uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
