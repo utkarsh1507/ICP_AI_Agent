@@ -1,0 +1,23 @@
+{
+  "name": "langchain_tools",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build" : "tsc",
+    "start" : "node dist/test-tool.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "langchain": "^0.3.29",
+    "ollama": "^0.5.16",
+    "zod": "^3.25.76"
+  }
+}
