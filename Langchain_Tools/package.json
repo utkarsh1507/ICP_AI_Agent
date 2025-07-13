@@ -5,19 +5,20 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build" : "tsc",
-    "start" : "node dist/test-tool.js"
+    "build": "tsc",
+    "start": "node dist/test-tool.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@dfinity/agent": "^2.4.1",
     "langchain": "^0.3.29",
     "ollama": "^0.5.16",
-    "zod": "^3.25.76"
+    "zod": "^4.0.5"
   }
 }
