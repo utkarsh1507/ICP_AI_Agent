@@ -108,3 +108,9 @@ export class MockTokenCanister{
 export const createMockTokenCanister = (actor: string): MockTokenCanister => {
     return new MockTokenCanister(actor);
 }
+
+
+
+export const createTokenCanister = (actor : any) : TokenCanisterClient =>{
+    return new TokenCanisterClient(actor);
+}
