@@ -1,6 +1,16 @@
 import ollama from 'ollama';
-import { createMockTokenCanister } from './token-canister.js';
+import { createMockTokenCanister, createTokenCanister, TokenCanisterClient } from './token-canister.js';
+import de from 'zod/v4/locales/de.cjs';
 
+
+let tokenCanister : ReturnType<typeof createTokenCanister> | null = null;
+let host = process.env.HOST || 'http://localhost:4943';
+let tokenCanisterId = process.env.TOKEN_CANISTER_ID || 'rrkah-fqaaa-aaaaa-aaaaq-cai';
+try {
+    tokenCanister =await TokenCanisterClient.create(tokenCanisterId, host);
+} catch (error) {
+    console.error('Failed to create token canister client, will use simulated responses:', error);
+}
 
 const mockTokenCanisterTool = {
     type : 'function',
@@ -57,3 +67,106 @@ async function runMockTokenCanisterTool(actor: string) {
 }
 
 runMockTokenCanisterTool('mock-actor-string').catch(error => console.error("An error occurred:", error));
+
+const getBalanceTool = {
+    type : 'function',
+    function : {
+        name : 'getBalance',
+        description : "Get the balance of a given account",
+        parameters : {
+            type : 'object',
+            required : ['account'],
+            properties : {
+                account : {type : 'string' , description : 'The account ID to check balance for'}
+            }
+        }
+    }
+}
+
+
+const transferTool = {
+    type : 'function',
+    function : {
+        name : 'transfer',
+        description : "Transfer tokens from one account to another",
+        parameters : {
+            type :'object',
+            required : ['from', 'to','amount'],
+            properties : {
+                from : {type : 'string',description : 'The sender account ID'},
+                to : {type : 'string',description : 'The recipient account ID'},
+                amount : {type : 'string',description : 'The amount to transfer'}
+            }
+        }
+    }
+}
+
+const getMetaDataTool = {
+    type : 'function',
+    function : {
+        name : 'getMetaData',
+        description : "Get the metadata of the token canister",
+        parameters : {
+            type : 'object',
+            required : [],
+            properties : {}
+        }
+    }
+}
+
+
+const getTranssactionsTool = {
+    type : 'function',
+    function : {
+        name : 'getTransactions',
+        description : "Get the transactions of the token canister",
+        parameters : {
+            type : 'object',
+            required : [],
+            properties : {
+                limit : {type : 'number', description : 'The number of transactions to return, default is 10'}
+            }
+        }
+    }
+}
+
+async function runTokenCanisterTool(content: string) {
+    const messages = [ {role : 'user' , content : content}];
+    //console.log('Prompt:', messages[0].content);
+    const availableFunctions = {
+        getBalance : tokenCanister?.getBalance.bind(tokenCanister),
+        transfer : tokenCanister?.tranfer.bind(tokenCanister),
+        getMetaData : tokenCanister?.getMetaData.bind(tokenCanister),
+        getTransactions : tokenCanister?.getTransactions.bind(tokenCanister)
+    }
+    const response = await ollama.chat({
+        model : 'llama3.1',
+        messages,
+        tools :[getBalanceTool , transferTool, getMetaDataTool, getTranssactionsTool]
+    });
+
+    let output : any;
+    if(response.message.tool_calls){
+        for(const tool of response.message.tool_calls){
+            const functionToCall = availableFunctions[tool.function.name];
+            if(functionToCall){
+                console.log('Calling function:', tool.function.name);
+                console.log('Arguments:', tool.function.arguments);
+                output = functionToCall(tool.function.arguments.actor);
+                console.log('Function output:', output);
+
+                // Add the function response to messages for the model to use
+                messages.push(response.message);
+                messages.push({
+                    role: 'tool',
+                    content: JSON.stringify(output),
+                });
+            } else {
+                console.log('Function', tool.function.name, 'not found');
+            }
+        }
+    }else{
+        console.log('No tool calls returned from model');
+    }
+    //const mockTokenCanister = createMockTokenCanister(actor);
+}
