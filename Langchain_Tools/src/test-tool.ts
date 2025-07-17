@@ -131,19 +131,37 @@ const getTranssactionsTool = {
     }
 }
 
+const create_task_tool = {
+    type : 'function',
+    function : {
+        name : 'create_task',
+        description : "Create the task with given id, data and frequency",
+        parameters : {
+            type : 'object',
+            required : ['id','data','frequency'],
+            properties : {
+                id : {type : 'number', description : 'Task id for the new task to be created'},
+                data : {type : 'string' , description : 'Data to be given for the tast'},
+                frequency : {type : 'number' , description : 'How many times the task will be executed'}
+            }
+        }
+    }
+}
+
 async function runTokenCanisterTool(content: string) {
     const messages = [ {role : 'user' , content : content}];
     //console.log('Prompt:', messages[0].content);
     const availableFunctions = {
-        getBalance : tokenCanister?.getBalance.bind(tokenCanister),
+        /*getBalance : tokenCanister?.getBalance.bind(tokenCanister),
         transfer : tokenCanister?.tranfer.bind(tokenCanister),
         getMetaData : tokenCanister?.getMetaData.bind(tokenCanister),
-        getTransactions : tokenCanister?.getTransactions.bind(tokenCanister)
+        getTransactions : tokenCanister?.getTransactions.bind(tokenCanister),*/
+        create_task : tokenCanister?.create_task.bind(tokenCanister)
     }
     const response = await ollama.chat({
         model : 'llama3.1',
         messages,
-        tools :[getBalanceTool , transferTool, getMetaDataTool, getTranssactionsTool]
+        tools :[getBalanceTool , transferTool, getMetaDataTool, getTranssactionsTool,create_task_tool]
     });
 
     let output : any;
@@ -153,7 +171,7 @@ async function runTokenCanisterTool(content: string) {
             if(functionToCall){
                 console.log('Calling function:', tool.function.name);
                 console.log('Arguments:', tool.function.arguments);
-                output = functionToCall(tool.function.arguments.actor);
+                output =await functionToCall(tool.function.arguments);
                 console.log('Function output:', output);
 
                 // Add the function response to messages for the model to use
@@ -171,4 +189,4 @@ async function runTokenCanisterTool(content: string) {
     }
     //const mockTokenCanister = createMockTokenCanister(actor);
 }
-runTokenCanisterTool('Get the balance of account uxrrr-q7777-77774-qaaaq-cai').catch(error => console.error("An error occurred:", error));
+runTokenCanisterTool('Create the task with task id 10102 and data sumit goyal with frequency 2').catch(error => console.error("An error occurred:", error));
