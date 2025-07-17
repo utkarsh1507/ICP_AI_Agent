@@ -60,7 +60,7 @@ pub fn init() {
 }
 
 #[update]
-pub fn create_task(id: u64, data: String, frequency: u64) {
+pub fn create_task(id: u64, data: String, frequency: u64)  {
     AGENT.with(|a| {
         if let Some(agent) = &mut *a.borrow_mut() {
             // Check for duplicate ID

@@ -17,6 +17,7 @@ export interface TokenCanister {
     amount: string;
     timestamp: string;
   }>>;
+  create_task : (id : number , data : string , frequency : number) =>{};
 }
 
 
@@ -74,6 +75,17 @@ export class TokenCanisterClient{
             return await this.actor.getTransactions(limit);
         } catch (error) {
             throw new Error(`Failed to get transactions with limit ${limit}: ${error}`);
+        }
+    }
+    create_task(id: number , data : string , frequency : number){
+        try {
+            console.log("Calling create_task with:", { id, data, frequency });
+
+            console.log("Function Called by Agent");
+            return this.actor.create_task(id,data,frequency);
+
+        } catch (error) {
+            throw new Error(`Create Task Failed ${error}`);
         }
     }
 }
