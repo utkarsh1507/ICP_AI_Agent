@@ -38,6 +38,7 @@ export class TokenCanisterClient{
                 agent,
                 canisterId : tokenCanisterId
             });
+            console.log(`Created Actor ------>>> ${JSON.stringify(actor)}<<<<-------`);
             return new TokenCanisterClient(actor);
         } catch (error) {
             throw new Error(`Failed to create TokenCanisterClient: ${error}`);

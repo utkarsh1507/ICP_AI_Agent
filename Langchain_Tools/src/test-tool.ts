@@ -1,6 +1,5 @@
 import ollama from 'ollama';
 import { createMockTokenCanister, createTokenCanister, TokenCanisterClient } from './token-canister.js';
-import de from 'zod/v4/locales/de.cjs';
 
 
 let tokenCanister : ReturnType<typeof createTokenCanister> | null = null;
@@ -8,8 +7,10 @@ let host = process.env.HOST || 'http://localhost:4943';
 let tokenCanisterId = process.env.TOKEN_CANISTER_ID || 'rrkah-fqaaa-aaaaa-aaaaq-cai';
 try {
     tokenCanister =await TokenCanisterClient.create(tokenCanisterId, host);
+    console.log(`Token Canister Created Successfully with canister id -----> ${tokenCanisterId} and host -----> ${host}`);
+    console.log(`Actor created with token canister have these methods -----> ${JSON.stringify(tokenCanister)}`);
 } catch (error) {
-    console.error('Failed to create token canister client, will use simulated responses:', error);
+    console.error('Failed to create token canister client:', error);
 }
 
 const mockTokenCanisterTool = {
@@ -66,7 +67,7 @@ async function runMockTokenCanisterTool(actor: string) {
     //const mockTokenCanister = createMockTokenCanister(actor);
 }
 
-runMockTokenCanisterTool('mock-actor-string').catch(error => console.error("An error occurred:", error));
+//runMockTokenCanisterTool('mock-actor-string').catch(error => console.error("An error occurred:", error));
 
 const getBalanceTool = {
     type : 'function',
@@ -170,3 +171,4 @@ async function runTokenCanisterTool(content: string) {
     }
     //const mockTokenCanister = createMockTokenCanister(actor);
 }
+runTokenCanisterTool('Get the balance of account uxrrr-q7777-77774-qaaaq-cai').catch(error => console.error("An error occurred:", error));
