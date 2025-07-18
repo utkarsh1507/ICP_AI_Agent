@@ -29,7 +29,7 @@ const mockTokenCanisterTool = {
         }
     }
 }
-const together = new Together({apiKey : '9e24b77bfa73e2b7c282ff5911e31c8c2c18e927a903df2647505d1587791c24'});
+const together = new Together({apiKey : ''});
 
 async function runMockTokenCanisterTool(actor: string) {
     const messages = [ {role : 'user' , content : `Create a mock token canister with actor : ${actor}`}];
