@@ -1,5 +1,7 @@
 import ollama from 'ollama';
 import { createMockTokenCanister, createTokenCanister, TokenCanisterClient } from './token-canister.js';
+import Together from 'together-ai';
+import { json } from 'zod';
 
 
 let tokenCanister : ReturnType<typeof createTokenCanister> | null = null;
@@ -27,7 +29,7 @@ const mockTokenCanisterTool = {
         }
     }
 }
-
+const together = new Together({apiKey : ''});
 
 async function runMockTokenCanisterTool(actor: string) {
     const messages = [ {role : 'user' , content : `Create a mock token canister with actor : ${actor}`}];
@@ -35,14 +37,23 @@ async function runMockTokenCanisterTool(actor: string) {
     const availableFunctions = {
         createMockTokenCanister
     }
-    const response = await ollama.chat({
-        model : 'llama3.1',
-        messages,
-        tools :[mockTokenCanisterTool]
+    const response = await together.chat.completions.create({
+        model : 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+        messages : [ {role : 'user' , content : `Create a mock token canister with actor : ${actor}`}],
+        tools :[mockTokenCanisterTool],
+        tool_choice : 'auto'
     });
 
     let output : any;
-    if(response.message.tool_calls){
+    const toolcalls = response?.choices[0]?.message?.tool_calls;
+    console.log("Tool to call -------->>>>>>>" ,toolcalls);
+    if(toolcalls){
+        for(const tool of toolcalls){
+            const agrs = JSON.parse(tool.function.arguments);
+            console.log("Arguments to provide in the function ------>>>>> " , agrs);
+        }
+    }
+    /*if(response.message.tool_calls){
         for(const tool of response.message.tool_calls){
             const functionToCall = availableFunctions[tool.function.name];
             if(functionToCall){
@@ -63,11 +74,11 @@ async function runMockTokenCanisterTool(actor: string) {
         }
     }else{
         console.log('No tool calls returned from model');
-    }
+    }*/
     //const mockTokenCanister = createMockTokenCanister(actor);
 }
 
-//runMockTokenCanisterTool('mock-actor-string').catch(error => console.error("An error occurred:", error));
+runMockTokenCanisterTool('mock-actor-string').catch(error => console.error("An error occurred:", error));
 
 const getBalanceTool = {
     type : 'function',
@@ -189,4 +200,7 @@ async function runTokenCanisterTool(content: string) {
     }
     //const mockTokenCanister = createMockTokenCanister(actor);
 }
-runTokenCanisterTool('Create the task with task id 10102 and data sumit goyal with frequency 2').catch(error => console.error("An error occurred:", error));
+//runTokenCanisterTool('Create the task with task id 10102 and data sumit goyal with frequency 2').catch(error => console.error("An error occurred:", error));
+
+
+
