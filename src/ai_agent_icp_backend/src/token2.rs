@@ -481,3 +481,14 @@ pub fn icrc2_get_all_accounts(symbol : String) -> Vec<(Account, Nat)> {
         }
     })
 }
+#[query]
+pub fn icrc2_get_all_records()->Vec<(String,String)>{
+    TOKEN_STATE.with(|t|{
+        t.borrow()
+        .iter()
+        .map(
+            |(symbol,state)| {(symbol.clone() , state.metadata.name.clone())}
+        )
+        .collect()
+    })
+}
