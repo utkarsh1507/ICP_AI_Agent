@@ -2,24 +2,16 @@ import { Actor, ActorSubclass, HttpAgent } from "@dfinity/agent";
 import {idlFactory} from "../../src/declarations/ai_agent_icp_backend/index.js";
 
 export interface TokenCanister {
-  getBalance: (account: string) => Promise<string>;
-  transfer: (from: string, to: string, amount: string) => Promise<{ transactionId: string }>;
-  getMetadata: () => Promise<{
+  icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint,fee : bigint)=>Promise<boolean>;
+}
+interface CreateTokenArgs{
     name: string;
     symbol: string;
     decimals: number;
-    totalSupply: string;
-  }>;
-  getTransactions: (limit?: number) => Promise<Array<{
-    id: string;
-    from: string;
-    to: string;
-    amount: string;
-    timestamp: string;
-  }>>;
-  create_task : (id : number , data : string , frequency : number) =>{};
-
-  create_token : (name : string , symbol : string , decimals : number ,description : string,logo : string , total_supply : string)=>boolean;
+    description?: string;
+    logo?: string;
+    total_supply: bigint;
+    fee: bigint;
 }
 
 
@@ -48,84 +40,10 @@ export class TokenCanisterClient{
         }
     }
 
-    async getBalance(account : string) : Promise<string>{
-        try {
-            return await this.actor.getBalance(account);
-        } catch (error) {
-            throw new Error(`Failed to get balance for account ${account}: ${error}`);
-        }
+    async create_token(args : CreateTokenArgs){
+        return await this.actor.icrc2_init(args.name , args.symbol,args.decimals,args.description ? [args.description] : [],args.logo? [args.logo] : [],BigInt(args.total_supply),BigInt(args.fee));
     }
 
-    async tranfer(from: string, to: string, amount: string): Promise<{ transactionId: string }> {
-        try {
-            return await this.actor.transfer(from, to , amount);
-        } catch (error) {
-            throw new Error(`Failed to transfer from ${from} to ${to} of amount ${amount}: ${error}`);
-        }
-    }
-
-    async getMetaData() : Promise<{ name : string ; symbol : string ; decimals : number ; totalSupply : string}>{
-        try {
-            return await this.actor.getMetadata();
-        } catch (error) {
-            throw new Error(`Failed to get metadata: ${error}`);
-        }
-    }
-
-    async getTransactions(limit : number = 10) : Promise<Array<{id : string ; from : string ; to : string ; amount : string ; timestamp : string }>>{
-        try {
-            return await this.actor.getTransactions(limit);
-        } catch (error) {
-            throw new Error(`Failed to get transactions with limit ${limit}: ${error}`);
-        }
-    }
-    create_task(id: number , data : string , frequency : number){
-        try {
-            console.log("Calling create_task with:", { id, data, frequency });
-
-            console.log("Function Called by Agent");
-            return this.actor.create_task(id,data,frequency);
-
-        } catch (error) {
-            throw new Error(`Create Task Failed ${error}`);
-        }
-    };
-    create_icrc_token(name : string , symbol : string , decimals : number ,description : string,logo : string , total_supply : string ){
-        return this.actor.create_token(name,symbol,decimals,description,logo,total_supply);
-    }
-
-}
-
-
-export class MockTokenCanister{
-    private actor : string;
-    constructor(actor : string){
-        this.actor = actor;
-        console.log(`Mock Class For Token Canister created with actor : ${actor}`);
-    }
-
-    static getBalance(account : string) : string {
-        console.log(`Mock Get Balance ran for account : ${account}`);
-        return `Account ${account} has a balance of 10000 BTC`;
-    }
-
-    static transfer(from : string , to : string , amount : string) : string{
-        console.log(`Mock transfer ran from ${from} to ${to} of amount ${amount}`);
-        return `Transferred ${amount} from ${from} to ${to}`;
-    }
-
-    static getMetadata() : string {
-        console.log("Mock getMetadata ran");
-        return `Token Name: MockToken, Symbol: MTK, Decimals: 18, Total Supply: 1000000 MTK`;
-    }
-    static getTransactions(limit: number = 10): string {
-        console.log(`Mock getTransactions ran with limit: ${limit}`);
-        return `Returning last ${limit} transactions.`;
-    }
-}
-
-export const createMockTokenCanister = (actor: string): MockTokenCanister => {
-    return new MockTokenCanister(actor);
 }
 
 

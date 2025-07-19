@@ -1,12 +1,19 @@
-import ollama from 'ollama';
-import { createMockTokenCanister, createTokenCanister, TokenCanisterClient } from './token-canister.js';
+
+import { createTokenCanister, TokenCanisterClient } from './token-canister.js';
 import Together from 'together-ai';
-import { json } from 'zod';
+import dotenv from "dotenv";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
+const __filename = fileURLToPath(import.meta.url);
+console.log("File name ->>",__filename)
+const __dirname = dirname(__filename);
+console.log("Dir Name ", __dirname);
 
+dotenv.config({path : `${dirname(__dirname)}/.env`});
 let tokenCanister : ReturnType<typeof createTokenCanister> | null = null;
 let host = process.env.HOST || 'http://localhost:4943';
-let tokenCanisterId = process.env.TOKEN_CANISTER_ID || 'rrkah-fqaaa-aaaaa-aaaaq-cai';
+let tokenCanisterId = process.env.TOKEN_CANISTER_ID || 'uxrrr-q7777-77774-qaaaq-cai';
 try {
     tokenCanister =await TokenCanisterClient.create(tokenCanisterId, host);
     console.log(`Token Canister Created Successfully with canister id -----> ${tokenCanisterId} and host -----> ${host}`);
@@ -15,192 +22,54 @@ try {
     console.error('Failed to create token canister client:', error);
 }
 
-const mockTokenCanisterTool = {
+const together = new Together({apiKey : process.env.TOGETHER_API});
+
+const create_token_tool = {
     type : 'function',
     function : {
-        name : 'createMockTokenCanister',
-        description : "Creates a mock token canister just for tesing",
+        name : 'create_token',
+        description : 'Initializes a new token from the user',
         parameters : {
             type : 'object',
-            required : ['actor'],
+            required : ['name', 'symbol', 'decimals','description','logo','total_supply'],
             properties : {
-                actor : {type : 'string' , description : 'The actor string for the mock token canister'}
+                name : {type : 'string' , description : 'Name of the token'},
+                symbol : {type : 'string' , description : 'Name of the token'},
+                decimals : {type : 'number' , description : 'Name of the token'},
+                description : {type : 'string' , description : 'Name of the token'},
+                logo : {type : 'string' , description : 'Name of the token'},
+                total_supply : {type : 'number' , description : 'Name of the token'},
             }
         }
     }
 }
-const together = new Together({apiKey : ''});
-
-async function runMockTokenCanisterTool(actor: string) {
-    const messages = [ {role : 'user' , content : `Create a mock token canister with actor : ${actor}`}];
-    console.log('Prompt:', messages[0].content);
+async function runTokenCanisterTool(content: string) {
+   
     const availableFunctions = {
-        createMockTokenCanister
+        create_token :tokenCanister?.create_token.bind(tokenCanister)
     }
     const response = await together.chat.completions.create({
         model : 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
-        messages : [ {role : 'user' , content : `Create a mock token canister with actor : ${actor}`}],
-        tools :[mockTokenCanisterTool],
+        messages : [ {role : 'user' , content : content}],
+        tools :[create_token_tool],
         tool_choice : 'auto'
     });
 
     let output : any;
-    const toolcalls = response?.choices[0]?.message?.tool_calls;
-    console.log("Tool to call -------->>>>>>>" ,toolcalls);
-    if(toolcalls){
-        for(const tool of toolcalls){
-            const agrs = JSON.parse(tool.function.arguments);
-            console.log("Arguments to provide in the function ------>>>>> " , agrs);
-        }
-    }
-    /*if(response.message.tool_calls){
-        for(const tool of response.message.tool_calls){
+    const tool_calls = response.choices[0]?.message?.tool_calls;
+    if(tool_calls){
+        for(const tool of tool_calls){
+            const arg = JSON.parse(tool.function.arguments);
+            console.log("Parsing the function with these arguments given by the user", arg);
             const functionToCall = availableFunctions[tool.function.name];
-            if(functionToCall){
-                console.log('Calling function:', tool.function.name);
-                console.log('Arguments:', tool.function.arguments);
-                output = functionToCall(tool.function.arguments.actor);
-                console.log('Function output:', output);
-
-                // Add the function response to messages for the model to use
-                messages.push(response.message);
-                messages.push({
-                    role: 'tool',
-                    content: JSON.stringify(output),
-                });
-            } else {
-                console.log('Function', tool.function.name, 'not found');
-            }
-        }
-    }else{
-        console.log('No tool calls returned from model');
-    }*/
-    //const mockTokenCanister = createMockTokenCanister(actor);
-}
-
-runMockTokenCanisterTool('mock-actor-string').catch(error => console.error("An error occurred:", error));
-
-const getBalanceTool = {
-    type : 'function',
-    function : {
-        name : 'getBalance',
-        description : "Get the balance of a given account",
-        parameters : {
-            type : 'object',
-            required : ['account'],
-            properties : {
-                account : {type : 'string' , description : 'The account ID to check balance for'}
-            }
+            output =await functionToCall(arg);
+            console.log("output from the function " , output);
+            
         }
     }
+   
 }
-
-
-const transferTool = {
-    type : 'function',
-    function : {
-        name : 'transfer',
-        description : "Transfer tokens from one account to another",
-        parameters : {
-            type :'object',
-            required : ['from', 'to','amount'],
-            properties : {
-                from : {type : 'string',description : 'The sender account ID'},
-                to : {type : 'string',description : 'The recipient account ID'},
-                amount : {type : 'string',description : 'The amount to transfer'}
-            }
-        }
-    }
-}
-
-const getMetaDataTool = {
-    type : 'function',
-    function : {
-        name : 'getMetaData',
-        description : "Get the metadata of the token canister",
-        parameters : {
-            type : 'object',
-            required : [],
-            properties : {}
-        }
-    }
-}
-
-
-const getTranssactionsTool = {
-    type : 'function',
-    function : {
-        name : 'getTransactions',
-        description : "Get the transactions of the token canister",
-        parameters : {
-            type : 'object',
-            required : [],
-            properties : {
-                limit : {type : 'number', description : 'The number of transactions to return, default is 10'}
-            }
-        }
-    }
-}
-
-const create_task_tool = {
-    type : 'function',
-    function : {
-        name : 'create_task',
-        description : "Create the task with given id, data and frequency",
-        parameters : {
-            type : 'object',
-            required : ['id','data','frequency'],
-            properties : {
-                id : {type : 'number', description : 'Task id for the new task to be created'},
-                data : {type : 'string' , description : 'Data to be given for the tast'},
-                frequency : {type : 'number' , description : 'How many times the task will be executed'}
-            }
-        }
-    }
-}
-
-async function runTokenCanisterTool(content: string) {
-    const messages = [ {role : 'user' , content : content}];
-    //console.log('Prompt:', messages[0].content);
-    const availableFunctions = {
-        /*getBalance : tokenCanister?.getBalance.bind(tokenCanister),
-        transfer : tokenCanister?.tranfer.bind(tokenCanister),
-        getMetaData : tokenCanister?.getMetaData.bind(tokenCanister),
-        getTransactions : tokenCanister?.getTransactions.bind(tokenCanister),*/
-        create_task : tokenCanister?.create_task.bind(tokenCanister)
-    }
-    const response = await ollama.chat({
-        model : 'llama3.1',
-        messages,
-        tools :[getBalanceTool , transferTool, getMetaDataTool, getTranssactionsTool,create_task_tool]
-    });
-
-    let output : any;
-    if(response.message.tool_calls){
-        for(const tool of response.message.tool_calls){
-            const functionToCall = availableFunctions[tool.function.name];
-            if(functionToCall){
-                console.log('Calling function:', tool.function.name);
-                console.log('Arguments:', tool.function.arguments);
-                output =await functionToCall(tool.function.arguments);
-                console.log('Function output:', output);
-
-                // Add the function response to messages for the model to use
-                messages.push(response.message);
-                messages.push({
-                    role: 'tool',
-                    content: JSON.stringify(output),
-                });
-            } else {
-                console.log('Function', tool.function.name, 'not found');
-            }
-        }
-    }else{
-        console.log('No tool calls returned from model');
-    }
-    //const mockTokenCanister = createMockTokenCanister(actor);
-}
-//runTokenCanisterTool('Create the task with task id 10102 and data sumit goyal with frequency 2').catch(error => console.error("An error occurred:", error));
+runTokenCanisterTool('Create the token with name mytoken, having symbol as SG, decimals 8 , its description is This is my new token , with logo as mylogo,total supply will be 1000 also the fee for the token will be 100').catch(error => console.error("An error occurred:", error));
 
 
 
