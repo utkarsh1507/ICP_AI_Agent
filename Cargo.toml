@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "src/ai_agent_icp_backend"
+    "src/ai_agent_icp_backend",
+    "src/token_factory"
 ]
 resolver = "2"
  

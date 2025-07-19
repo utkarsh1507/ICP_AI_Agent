@@ -93,12 +93,12 @@ service : {
 
     icrc2_balance_of : (record { owner : principal; subaccount : opt blob }) -> (nat) query;
 
-    icrc2_fee : () -> (nat) query;
-    icrc2_total_supply : () -> (nat) query;
-    icrc2_name : () -> (text) query;
-    icrc2_symbol : () -> (text) query;
-    icrc2_decimals : () -> (nat8) query;
-    icrc2_minting_account : () -> (opt record { owner : principal; subaccount : opt blob }) query;
+    icrc2_fee : (text) -> (nat) query;
+    icrc2_total_supply : (text) -> (nat) query;
+    icrc2_name : (text) -> (text) query;
+    icrc2_symbol : (text) -> (text) query;
+    icrc2_decimals : (text) -> (nat8) query;
+    icrc2_minting_account : (text) -> (opt record { owner : principal; subaccount : opt blob }) query;
     icrc2_get_transactions : (nat64) -> (vec record {
         id : nat64;
         from : record { owner : principal; subaccount : opt blob };
@@ -111,4 +111,5 @@ service : {
         account : record { owner : principal; subaccount : opt blob };
         balance : nat;
     }) query;
+    icrc2_metadata :(text) -> (vec record {text;text});
 };
