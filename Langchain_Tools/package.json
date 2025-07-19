@@ -17,9 +17,12 @@
   },
   "dependencies": {
     "@dfinity/agent": "^2.4.1",
+    "dotenv": "^17.2.0",
     "langchain": "^0.3.29",
     "ollama": "^0.5.16",
+    "path": "^0.12.7",
     "together-ai": "^0.20.0",
+    "url": "^0.11.4",
     "zod": "^4.0.5"
   }
 }
