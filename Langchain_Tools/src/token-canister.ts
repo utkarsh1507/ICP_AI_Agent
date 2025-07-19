@@ -18,6 +18,8 @@ export interface TokenCanister {
     timestamp: string;
   }>>;
   create_task : (id : number , data : string , frequency : number) =>{};
+
+  create_token : (name : string , symbol : string , decimals : number ,description : string,logo : string , total_supply : string)=>boolean;
 }
 
 
@@ -87,7 +89,11 @@ export class TokenCanisterClient{
         } catch (error) {
             throw new Error(`Create Task Failed ${error}`);
         }
+    };
+    create_icrc_token(name : string , symbol : string , decimals : number ,description : string,logo : string , total_supply : string ){
+        return this.actor.create_token(name,symbol,decimals,description,logo,total_supply);
     }
+
 }
 
 
