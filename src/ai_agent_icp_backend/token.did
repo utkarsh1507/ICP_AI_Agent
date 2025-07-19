@@ -112,4 +112,5 @@ service : {
         balance : nat;
     }) query;
     icrc2_metadata :(text) -> (vec record {text;text});
+    icrc2_get_all_records : () -> (vec record {text; text});
 };

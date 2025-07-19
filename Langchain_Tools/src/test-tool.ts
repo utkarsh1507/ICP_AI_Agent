@@ -1,4 +1,3 @@
-
 import { createTokenCanister, TokenCanisterClient } from './token-canister.js';
 import Together from 'together-ai';
 import dotenv from "dotenv";
@@ -34,24 +33,54 @@ const create_token_tool = {
             required : ['name', 'symbol', 'decimals','description','logo','total_supply'],
             properties : {
                 name : {type : 'string' , description : 'Name of the token'},
-                symbol : {type : 'string' , description : 'Name of the token'},
-                decimals : {type : 'number' , description : 'Name of the token'},
-                description : {type : 'string' , description : 'Name of the token'},
-                logo : {type : 'string' , description : 'Name of the token'},
-                total_supply : {type : 'number' , description : 'Name of the token'},
+                symbol : {type : 'string' , description : 'Symbol of the token'},
+                decimals : {type : 'number' , description : 'Decimal of the token'},
+                description : {type : 'string' , description : 'Description of the token'},
+                logo : {type : 'string' , description : 'Logo of the token'},
+                total_supply : {type : 'number' , description : 'Total Supply of the token'},
             }
+        }
+    }
+}
+
+const token_metadata_tool = {
+    type : 'function',
+    function : {
+        name : 'get_token_metadata',
+        description : 'Returns the metadat of the ICRC token using symbol',
+        parameters : {
+            type : 'object',
+            required : ['symbol'],
+            properties : {
+                symbol : {type : 'string' , description : 'Symbol of the token'}
+            }
+        }
+    }
+}
+
+const get_all_tokens_tool = {
+    type : 'function',
+    function : {
+        name : "get_all_tokens",
+        description : "Returns all ICRC tokens",
+        parameters : {
+            type : '',
+            required : [],
+            properties : {}
         }
     }
 }
 async function runTokenCanisterTool(content: string) {
    
     const availableFunctions = {
-        create_token :tokenCanister?.create_token.bind(tokenCanister)
+        create_token :tokenCanister?.create_token.bind(tokenCanister),
+        get_token_metadata : tokenCanister?.get_token_metadata.bind(tokenCanister),
+        get_all_tokens : tokenCanister?.get_all_tokens.bind(tokenCanister)
     }
     const response = await together.chat.completions.create({
         model : 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
         messages : [ {role : 'user' , content : content}],
-        tools :[create_token_tool],
+        tools :[create_token_tool,token_metadata_tool,get_all_tokens_tool],
         tool_choice : 'auto'
     });
 
@@ -69,7 +98,5 @@ async function runTokenCanisterTool(content: string) {
     }
    
 }
-runTokenCanisterTool('Create the token with name mytoken, having symbol as SG, decimals 8 , its description is This is my new token , with logo as mylogo,total supply will be 1000 also the fee for the token will be 100').catch(error => console.error("An error occurred:", error));
-
-
-
+runTokenCanisterTool('Get the metadata for the token having symbol T3 and after this get me all the tokens present.')
+.catch(error => console.error("An error occurred:", error));
