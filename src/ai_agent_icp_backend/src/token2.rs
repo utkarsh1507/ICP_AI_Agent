@@ -105,7 +105,7 @@ impl Default for Metadata {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default,Deserialize)]
 pub struct TokenState {
     pub metadata: Metadata,
     pub balances: HashMap<Account, Nat>,
@@ -126,7 +126,7 @@ pub struct Transaction {
 }
 
 thread_local! {
-    static TOKEN_STATE: RefCell<Option<TokenState>> = RefCell::new(None);
+    static TOKEN_STATE: RefCell<HashMap<String,TokenState>> = RefCell::new(HashMap::new());
 }
 
 #[update]
@@ -149,6 +149,8 @@ pub fn icrc2_init(
         owner: caller,
         subaccount: None,
     };
+    let symbol_clone = symbol.clone();
+
     let metadata = Metadata {
         name,
         symbol,
@@ -169,94 +171,95 @@ pub fn icrc2_init(
         transaction_counter: 0,
         minting_account,
     };
+    let state_clone = state.clone();
     TOKEN_STATE.with(|token_state| {
-        *token_state.borrow_mut() = Some(state);
+        token_state.borrow_mut().insert(symbol_clone, state);
     });
-    debug_print(format!("ICRC-2 token initialized successfully with supply: {}", initial_supply));
+    debug_print(format!("ICRC-2 token initialized successfully with data: {:?}", state_clone));
     true
 }
 
 // ICRC-1 compatible queries
 #[query]
-pub fn icrc2_name() -> String {
+pub fn icrc2_name(symbol : String) -> String {
     TOKEN_STATE.with(|token_state| {
         token_state
             .borrow()
-            .as_ref()
+            .get(&symbol)
             .map(|state| state.metadata.name.clone())
             .unwrap_or_default()
     })
 }
 
 #[query]
-pub fn icrc2_symbol() -> String {
+pub fn icrc2_symbol(name : String) -> String {
     TOKEN_STATE.with(|token_state| {
         token_state
             .borrow()
-            .as_ref()
+            .get(&name)
             .map(|state| state.metadata.symbol.clone())
             .unwrap_or_default()
     })
 }
 
 #[query]
-pub fn icrc2_decimals() -> u8 {
+pub fn icrc2_decimals(symbol : String) -> u8 {
     TOKEN_STATE.with(|token_state| {
         token_state
             .borrow()
-            .as_ref()
+            .get(&symbol)
             .map(|state| state.metadata.decimals)
             .unwrap_or(8)
     })
 }
 
 #[query]
-pub fn icrc2_fee() -> Nat {
+pub fn icrc2_fee(symbol : String) -> Nat {
     TOKEN_STATE.with(|token_state| {
         token_state
             .borrow()
-            .as_ref()
+            .get(&symbol)
             .map(|state| state.metadata.fee.clone())
             .unwrap_or_else(|| Nat::from(0u64))
     })
 }
 
 #[query]
-pub fn icrc2_total_supply() -> Nat {
+pub fn icrc2_total_supply(symbol : String) -> Nat {
     TOKEN_STATE.with(|token_state| {
         token_state
             .borrow()
-            .as_ref()
+            .get(&symbol)
             .map(|state| state.metadata.total_supply.clone())
             .unwrap_or_else(|| Nat::from(0u64))
     })
 }
 
 #[query]
-pub fn icrc2_minting_account() -> Option<Account> {
+pub fn icrc2_minting_account(symbol : String) -> Option<Account> {
     TOKEN_STATE.with(|token_state| {
         token_state
             .borrow()
-            .as_ref()
+            .get(&symbol)
             .map(|state| state.minting_account.clone())
     })
 }
 
 #[query]
-pub fn icrc2_balance_of(account: Account) -> Nat {
+pub fn icrc2_balance_of(account: Account,symbol : String) -> Nat {
     TOKEN_STATE.with(|token_state| {
         token_state
             .borrow()
-            .as_ref()
+            .get(&symbol)
             .map(|state| state.balances.get(&account).cloned().unwrap_or_else(|| Nat::from(0u64)))
             .unwrap_or_else(|| Nat::from(0u64))
     })
 }
 
 #[query]
-pub fn icrc2_metadata() -> Vec<(String, String)> {
+pub fn icrc2_metadata(symbol : String) -> Vec<(String, String)> {
     TOKEN_STATE.with(|token_state| {
-        token_state.borrow().as_ref().map(|state| {
+        token_state.borrow().get(&symbol).map(|state| {
             let mut meta = vec![
                 ("name".to_string(), state.metadata.name.clone()),
                 ("symbol".to_string(), state.metadata.symbol.clone()),
@@ -277,10 +280,12 @@ pub fn icrc2_metadata() -> Vec<(String, String)> {
 }
 
 #[update]
-pub fn icrc2_transfer(args: TransferArgs) -> TransferResult {
+pub fn icrc2_transfer(symbol : String,args: TransferArgs) -> TransferResult {
     let caller_principal = msg_caller();
+
     TOKEN_STATE.with(|token_state| {
-        if let Some(state) = &mut *token_state.borrow_mut() {
+        let mut tokens = token_state.borrow_mut();
+        if let Some(state) = tokens.get_mut(&symbol) {
             let from_account = Account {
                 owner: caller_principal,
                 subaccount: args.from_subaccount,
@@ -320,10 +325,11 @@ pub fn icrc2_transfer(args: TransferArgs) -> TransferResult {
 }
 
 #[update]
-pub fn icrc2_mint(to: Account, amount: Nat) -> TransferResult {
+pub fn icrc2_mint(to: Account, amount: Nat,symbol : String) -> TransferResult {
     let caller_principal = msg_caller();
     TOKEN_STATE.with(|token_state| {
-        if let Some(state) = &mut *token_state.borrow_mut() {
+        let mut tokens = token_state.borrow_mut();
+        if let Some(state) = tokens.get_mut(&symbol) {
             if state.minting_account.owner != caller_principal {
                 return TransferResult::Err(TransferError::GenericError {
                     error_code: Nat::from(1u64),
@@ -356,10 +362,11 @@ pub fn icrc2_mint(to: Account, amount: Nat) -> TransferResult {
 
 // ICRC2-specific methods
 #[update]
-pub fn icrc2_approve(args: ApproveArgs) -> TransferResult {
+pub fn icrc2_approve(args: ApproveArgs,symbol : String) -> TransferResult {
     let caller_principal = msg_caller();
     TOKEN_STATE.with(|token_state| {
-        if let Some(state) = &mut *token_state.borrow_mut() {
+        let mut tokens = token_state.borrow_mut();
+        if let Some(state) = tokens.get_mut(&symbol) {
             let owner_account = Account {
                 owner: caller_principal,
                 subaccount: args.from_subaccount,
@@ -383,21 +390,22 @@ pub fn icrc2_approve(args: ApproveArgs) -> TransferResult {
 }
 
 #[query]
-pub fn icrc2_allowance(args: AllowanceArgs) -> Nat {
+pub fn icrc2_allowance(args: AllowanceArgs,symbol : String) -> Nat {
     TOKEN_STATE.with(|token_state| {
         token_state
             .borrow()
-            .as_ref()
+            .get(&symbol)
             .map(|state| state.allowances.get(&(args.account.clone(), args.spender.clone())).cloned().unwrap_or_else(|| Nat::from(0u64)))
             .unwrap_or_else(|| Nat::from(0u64))
     })
 }
 
 #[update]
-pub fn icrc2_transfer_from(args: TransferFromArgs) -> TransferResult {
+pub fn icrc2_transfer_from(args: TransferFromArgs,symbol: String) -> TransferResult {
     let caller_principal = msg_caller();
     TOKEN_STATE.with(|token_state| {
-        if let Some(state) = &mut *token_state.borrow_mut() {
+        let mut tokens = token_state.borrow_mut();
+        if let Some(state) = tokens.get_mut(&symbol) {
             let spender_account = Account {
                 owner: caller_principal,
                 subaccount: args.spender_subaccount,
@@ -441,9 +449,10 @@ pub fn icrc2_transfer_from(args: TransferFromArgs) -> TransferResult {
 }
 
 #[query]
-pub fn icrc2_get_transactions(limit: u64) -> Vec<Transaction> {
+pub fn icrc2_get_transactions(limit: u64,symbol : String) -> Vec<Transaction> {
     TOKEN_STATE.with(|token_state| {
-        if let Some(state) = &*token_state.borrow() {
+        let tokens = token_state.borrow();
+        if let Some(state) =tokens.get(&symbol) {
             if limit == 0 || limit > state.transactions.len() as u64 {
                 state.transactions.clone()
             } else {
@@ -460,9 +469,10 @@ pub fn icrc2_get_transactions(limit: u64) -> Vec<Transaction> {
 }
 
 #[query]
-pub fn icrc2_get_all_accounts() -> Vec<(Account, Nat)> {
+pub fn icrc2_get_all_accounts(symbol : String) -> Vec<(Account, Nat)> {
     TOKEN_STATE.with(|token_state| {
-        if let Some(state) = &*token_state.borrow() {
+        let tokens = token_state.borrow();
+        if let Some(state) = tokens.get(&symbol) {
             state.balances.iter()
                 .map(|(account, balance)| (account.clone(), balance.clone()))
                 .collect()

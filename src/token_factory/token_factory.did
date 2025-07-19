@@ -1,0 +1,3 @@
+service : {
+  create_token : (text) -> (text);
+};
