@@ -18,7 +18,7 @@ const useAuthClient = ()=>{
         console.log("Auth client initialized");
         setAuthClient(client);
         const isAuth = await client.isAuthenticated();
-        console.log("Client authenticated");
+
         if(isAuth){
             const identity = client.getIdentity();
             console.log(" got identity");

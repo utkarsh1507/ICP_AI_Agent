@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './index.css';
+import { useAuth } from '../../../hooks/useAuth';
 
 const Hero: React.FC = () => {
   const [prompt, setPrompt] = useState('');
+  const [authenticated , setAuthenticated]= useState<boolean | null | undefined>(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle prompt submission
     console.log('Prompt submitted:', prompt);
   };
+  useEffect(()=>{
+    const auth = useAuth();
+    if(auth){
+      setAuthenticated(auth?.isAuthenticated);
+    }
+
+  })
 
   return (
     <section className="hero">
@@ -39,7 +48,7 @@ const Hero: React.FC = () => {
               onChange={(e) => setPrompt(e.target.value)}
             />
             <button type="submit" className="hero-prompt-button">
-              Ask AI
+              {authenticated ?  'Ask AI' : 'Login First'}
             </button>
           </form>
           

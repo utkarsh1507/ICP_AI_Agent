@@ -15,12 +15,18 @@
       "type": "assets",
       "workspace": "ai_agent_icp_frontend"
     },
-     "icrc1_ledger_canister": {
-        "type": "custom",
-        "candid": "https://raw.githubusercontent.com/dfinity/ic/2f52f298de53944209f550774505aa72a1a3ed17/rs/ledger_suite/icrc1/ledger/ledger.did",
-        "wasm": "https://download.dfinity.systems/ic/2f52f298de53944209f550774505aa72a1a3ed17/canisters/ic-icrc1-ledger.wasm.gz",
-         "init_arg": "(variant { Init = record { token_symbol = \"SD\"; token_name = \"StarDusts\"; minting_account = record { owner = principal \"uxrrr-q7777-77774-qaaaq-cai\"; }; transfer_fee = 1000; metadata = vec {}; feature_flags = opt record { icrc2 = true }; initial_balances = vec { record { record { owner = principal \"uxrrr-q7777-77774-qaaaq-cai\"}; 1000000000 } }; archive_options = record { num_blocks_to_archive = 1000; trigger_threshold = 2000; controller_id = principal \"za74l-7sye6-iqeg2-f2mqa-xc7ql-glisz-ktzxa-neshb-dpqb4-aczxl-oqe\"; cycles_for_archive_creation = opt 10000000000000; } } })"
-     }
+      "internet_identity": {
+      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
+      "frontend": {},
+      "id" :"rdmx6-jaaaa-aaaaa-aaadq-cai",
+      "remote": {
+        "id": {
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+        }
+      },
+      "type": "pull",
+      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
+    }
   },
   "defaults": {
     "build": {
