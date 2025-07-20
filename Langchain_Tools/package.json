@@ -20,9 +20,8 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@dfinity/agent": "^2.4.1",
+    "@dfinity/agent": "^3.0.0",
     "dotenv": "^17.2.0",
-    "langchain": "^0.3.29",
     "ollama": "^0.5.16",
     "path": "^0.12.7",
     "together-ai": "^0.20.0",
