@@ -1,23 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import './index.css';
 import { useAuth } from '../../../hooks/useAuth';
+import { sendPrompt } from '../../../../utils/sendPrompt';
 
 const Hero: React.FC = () => {
-  const [prompt, setPrompt] = useState('');
-  const [authenticated , setAuthenticated]= useState<boolean | null | undefined>(false);
+  const auth = useAuth();
+  if (!auth) return <div>Loading...</div>;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { login, logout, isAuthenticated, principal } = auth;
+  const [prompt, setPrompt] = useState<string | undefined>('');
+  const [response, setResponse] = useState<string | undefined | null>('');
+  //const [authenticated , setAuthenticated]= useState<boolean | null | undefined>(false);
+
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
+    if(prompt !== ''){
+      const aiResponse =await sendPrompt(prompt);
+      setResponse(aiResponse);
+    }
     // Handle prompt submission
     console.log('Prompt submitted:', prompt);
   };
-  useEffect(()=>{
-    const auth = useAuth();
-    if(auth){
-      setAuthenticated(auth?.isAuthenticated);
-    }
 
-  })
 
   return (
     <section className="hero">
@@ -47,10 +51,20 @@ const Hero: React.FC = () => {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
-            <button type="submit" className="hero-prompt-button">
-              {authenticated ?  'Ask AI' : 'Login First'}
-            </button>
+          
+              {isAuthenticated ? <button type="submit" className="hero-prompt-button"> Ask AI</button> :<button onClick={()=>login()} className='hero-prompt-button'> Login First</button>}
+         
           </form>
+          {response && (
+            <div className="hero-response-container fade-in">
+              <div className="hero-response-header">
+                <span className="hero-response-title">AI Response</span>
+              </div>
+              <div className="hero-response-content">
+                {response}
+              </div>
+            </div>
+          )}
           
           <div className="hero-stats slide-up">
             <div className="hero-stat">

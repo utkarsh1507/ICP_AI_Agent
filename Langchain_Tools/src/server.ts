@@ -2,10 +2,11 @@ import express from 'express'
 import { create_token_canister } from './create-token-canister.js';
 import { TokenCanisterClient } from './token-canister.js';
 import { runTokenCanisterTool } from './test-tool.js';
+import cors from 'cors';
 const app = express()
 app.use(express.json());
-const port = process.env.PORT || 3000;
-
+const port = process.env.PORT || 5000;
+app.use(cors());
 export let tokenCanister : TokenCanisterClient | null = null;
 
 (async ()=> {
