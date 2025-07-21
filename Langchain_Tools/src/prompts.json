@@ -1,0 +1,8 @@
+{
+    "prompt1" : "Create a token with the following details : Name - BestToken , symbol - BT , description - This is the best token I have ever had , supply - 10000 , fee - 100 , logo - BToken , decimals - 6",
+    
+    "prompt2" : "Get the details of token having symbol BT",
+    
+    "prompt3" : "Get the details of all the tokens"
+
+}
