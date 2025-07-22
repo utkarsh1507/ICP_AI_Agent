@@ -6,6 +6,7 @@
   justify-content: center;
   background: var(--primary-bg);
   overflow: hidden;
+  padding-top: 70px;
 }
 
 .hero::before {
