@@ -200,6 +200,30 @@
   font-size: 0.95rem;
   white-space: pre-wrap;
 }
+.hero-response-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.hero-response-list li {
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.95rem;
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-primary);
+}
+
+.hero-response-list li:last-child {
+  border-bottom: none;
+}
+
+.hero-response-list strong {
+  font-weight: 600;
+  color: var(--brand-primary);
+  margin-right: var(--spacing-md);
+}
 
 
 @media (max-width: 768px) {

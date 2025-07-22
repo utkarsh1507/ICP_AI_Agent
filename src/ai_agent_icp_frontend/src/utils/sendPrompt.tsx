@@ -10,7 +10,7 @@ export async function sendPrompt(prompt:string | undefined| null): Promise<strin
                 }
             })
             if(response){
-                const output = response.json();
+                const output =await response.json();
                 return output;
             }
         }

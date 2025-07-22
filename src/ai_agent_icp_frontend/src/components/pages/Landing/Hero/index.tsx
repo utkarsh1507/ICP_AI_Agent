@@ -9,18 +9,39 @@ const Hero: React.FC = () => {
 
   const { login, logout, isAuthenticated, principal } = auth;
   const [prompt, setPrompt] = useState<string | undefined>('');
-  const [response, setResponse] = useState<string | undefined | null>('');
+  const [response, setResponse] = useState<any>(null);
+  
   //const [authenticated , setAuthenticated]= useState<boolean | null | undefined>(false);
 
-  const handleSubmit = async(e: React.FormEvent) => {
-    e.preventDefault();
-    if(prompt !== ''){
-      const aiResponse =await sendPrompt(prompt);
-      setResponse(aiResponse);
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (prompt !== '') {
+    const aiResponse = await sendPrompt(prompt);
+    console.log('AI Response:', aiResponse);
+
+    type AIResponseItem = { Text?: string; PairList?: [string, string][] };
+    const firstItem = aiResponse ? (aiResponse[0] as AIResponseItem) : null;
+
+    if (firstItem && typeof firstItem === 'object' && 'Text' in firstItem) {
+      setResponse({
+        type: 'Text',
+        content: firstItem.Text,
+      });
+    } else if (firstItem && typeof firstItem === 'object' && 'PairList' in firstItem) {
+      setResponse({
+        type: 'PairList',
+        content: firstItem.PairList,
+      });
+    } else {
+      setResponse({
+        type: 'Unknown',
+        content: JSON.stringify(aiResponse),
+      });
     }
-    // Handle prompt submission
-    console.log('Prompt submitted:', prompt);
-  };
+  }
+};
+
+
 
 
   return (
@@ -56,15 +77,31 @@ const Hero: React.FC = () => {
          
           </form>
           {response && (
-            <div className="hero-response-container fade-in">
-              <div className="hero-response-header">
-                <span className="hero-response-title">AI Response</span>
-              </div>
-              <div className="hero-response-content">
-                {response}
-              </div>
-            </div>
-          )}
+  <div className="hero-response-container fade-in">
+    <div className="hero-response-header">
+      <span className="hero-response-title">AI Response</span>
+    </div>
+    <div className="hero-response-content">
+      {response.type === 'Text' && <p>{response.content}</p>}
+
+      {response.type === 'PairList' && (
+        <ul className="hero-response-list">
+          {response.content.map((pair: [string, string], idx: number) => (
+            <li key={idx}>
+              <strong>{pair[0]}:</strong> {pair[1]}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {response.type === 'Unknown' && (
+        <pre>{response.content}</pre>
+      )}
+    </div>
+  </div>
+)}
+
+
           
           <div className="hero-stats slide-up">
             <div className="hero-stat">

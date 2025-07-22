@@ -29,7 +29,10 @@ type TransferError = variant {
     InsufficientAllowance : record { allowance : nat };
     GenericError : record { error_code : nat; message : text };
 };
-
+type APIResponse = variant {
+  Text : text;
+  PairList : vec record { text; text };
+};
 service : {
     // Token management
     create_token : (vec record { text; text; }, nat64, opt nat64) -> (text);
@@ -52,7 +55,7 @@ service : {
     cycles_available : () -> (nat64) query;
 
     // ---- ICRC-2 Token methods ----
-    icrc2_init : (text, text, nat8, opt text, opt text, nat, nat) -> (bool);
+    icrc2_init : (text, text, nat8, opt text, opt text, nat, nat) -> (APIResponse);
 
     icrc2_mint : (record { owner : principal; subaccount : opt blob }, nat) -> (variant { Ok : nat; Err : TransferError });
 
@@ -111,6 +114,6 @@ service : {
         account : record { owner : principal; subaccount : opt blob };
         balance : nat;
     }) query;
-    icrc2_metadata :(text) -> (vec record {text;text});
-    icrc2_get_all_records : () -> (vec record {text; text});
+    icrc2_metadata :(text) -> (APIResponse);
+    icrc2_get_all_records : () -> (APIResponse);
 };
