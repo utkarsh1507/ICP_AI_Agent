@@ -125,6 +125,12 @@ pub struct Transaction {
     pub memo: Option<Vec<u8>>,
 }
 
+#[derive(CandidType,Deserialize,Serialize)]
+#[serde(tag ="type" , content = "content")]
+pub enum APIResponse{
+    Text(String),
+    PairList(Vec<(String,String)>)
+}
 thread_local! {
     static TOKEN_STATE: RefCell<HashMap<String,TokenState>> = RefCell::new(HashMap::new());
 }
@@ -138,7 +144,7 @@ pub fn icrc2_init(
     logo: Option<String>,
     initial_supply: Nat,
     fee: Nat,
-) -> bool {
+) -> APIResponse {
     let caller = msg_caller();
     debug_print(format!("Initializing ICRC-2 token: {}", name));
     let minting_account = Account {
@@ -176,7 +182,15 @@ pub fn icrc2_init(
         token_state.borrow_mut().insert(symbol_clone, state);
     });
     debug_print(format!("ICRC-2 token initialized successfully with data: {:?}", state_clone));
-    true
+    let output = format!(
+        "ICRC-2 token initialized with name: {}, symbol: {}, decimals: {}, total_supply: {}, fee: {}",
+        state_clone.metadata.name,
+        state_clone.metadata.symbol,
+        state_clone.metadata.decimals,
+        state_clone.metadata.total_supply,
+        state_clone.metadata.fee
+    );
+    APIResponse::Text(output)
 }
 
 // ICRC-1 compatible queries
@@ -257,7 +271,7 @@ pub fn icrc2_balance_of(account: Account,symbol : String) -> Nat {
 }
 
 #[query]
-pub fn icrc2_metadata(symbol : String) -> Vec<(String, String)> {
+pub fn icrc2_metadata(symbol : String) -> APIResponse {
     TOKEN_STATE.with(|token_state| {
         token_state.borrow().get(&symbol).map(|state| {
             let mut meta = vec![
@@ -274,8 +288,8 @@ pub fn icrc2_metadata(symbol : String) -> Vec<(String, String)> {
             if let Some(logo) = &state.metadata.logo {
                 meta.push(("logo".to_string(), logo.clone()));
             }
-            meta
-        }).unwrap_or_default()
+            APIResponse::PairList(meta)
+        }).unwrap_or_else(|| APIResponse::Text("Token not found".to_string()))
     })
 }
 
@@ -482,13 +496,14 @@ pub fn icrc2_get_all_accounts(symbol : String) -> Vec<(Account, Nat)> {
     })
 }
 #[query]
-pub fn icrc2_get_all_records()->Vec<(String,String)>{
-    TOKEN_STATE.with(|t|{
+pub fn icrc2_get_all_records()->APIResponse{
+   let records = TOKEN_STATE.with(|t|{
         t.borrow()
         .iter()
         .map(
             |(symbol,state)| {(symbol.clone() , state.metadata.name.clone())}
         )
         .collect()
-    })
+    });
+    APIResponse::PairList(records)
 }
