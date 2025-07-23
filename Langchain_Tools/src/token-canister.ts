@@ -1,10 +1,17 @@
 import { Actor, ActorSubclass, HttpAgent } from "@dfinity/agent";
 import {idlFactory} from "../../src/declarations/ai_agent_icp_backend/index.js";
+import { Principal } from "@dfinity/principal";
+interface Account {
+  owner: Principal;
+  subaccount?: Uint8Array | null;
+}
 
+type TransferResult = { Ok: bigint } | { Err: any };
 export interface TokenCanister {
   icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint,fee : bigint)=>Promise<boolean>;
   icrc2_metadata :(symbol : string) =>Promise<MetaData>;
   icrc2_get_all_records : () => Promise<AllToken>;
+  icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array] }, amount: bigint, symbol: string) => Promise<TransferResult>;
 }
 interface CreateTokenArgs{
     name: string;
@@ -15,6 +22,7 @@ interface CreateTokenArgs{
     total_supply: bigint;
     fee: bigint;
 }
+
 
 type TokenMetaData = [string,string];
 type MetaData = TokenMetaData[];
@@ -56,8 +64,28 @@ export class TokenCanisterClient{
     async get_all_tokens(){
         return await this.actor.icrc2_get_all_records();
     }
+   /*async icrc2_mint(
+  to: { owner: string; subaccount?: string },
+  amount: bigint,
+  symbol: string
+): Promise<TransferResult> {
+  const formattedAccount: {
+    owner: Principal;
+    subaccount: [Uint8Array] | [];
+  } = {
+    owner: Principal.fromText(to.owner),
+    subaccount:
+      typeof to.subaccount === 'string' && to.subaccount.trim() !== ''
+        ? [Uint8Array.from(Buffer.from(to.subaccount, 'hex'))]
+        : [],
+  };
+
+  return await this.actor.icrc2_mint(formattedAccount, amount, symbol);
+}*/
 
 }
+
+
 
 
 

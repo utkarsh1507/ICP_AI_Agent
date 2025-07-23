@@ -57,7 +57,8 @@ service : {
     // ---- ICRC-2 Token methods ----
     icrc2_init : (text, text, nat8, opt text, opt text, nat, nat) -> (APIResponse);
 
-    icrc2_mint : (record { owner : principal; subaccount : opt blob }, nat) -> (variant { Ok : nat; Err : TransferError });
+    icrc2_mint : (record { owner : principal; subaccount : opt blob }, nat, text) -> (variant { Ok : nat; Err : TransferError });
+
 
     icrc2_transfer : (record {
         from_subaccount : opt blob;
@@ -110,7 +111,7 @@ service : {
         timestamp : nat64;
         memo : opt vec nat8;
     }) query;
-    icrc2_get_all_accounts : () -> (vec record {
+    icrc2_get_all_accounts : (text) -> (vec record {
         account : record { owner : principal; subaccount : opt blob };
         balance : nat;
     }) query;
