@@ -125,6 +125,12 @@ pub struct Transaction {
     pub memo: Option<Vec<u8>>,
 }
 
+#[derive(CandidType, Deserialize, Serialize, Clone)]
+pub struct AccountBalance {
+    pub account: Account,
+    pub balance: Nat,
+}
+
 #[derive(CandidType,Deserialize,Serialize)]
 #[serde(tag ="type" , content = "content")]
 pub enum APIResponse{
@@ -483,18 +489,22 @@ pub fn icrc2_get_transactions(limit: u64,symbol : String) -> Vec<Transaction> {
 }
 
 #[query]
-pub fn icrc2_get_all_accounts(symbol : String) -> Vec<(Account, Nat)> {
+pub fn icrc2_get_all_accounts(symbol: String) -> Vec<AccountBalance> {
     TOKEN_STATE.with(|token_state| {
         let tokens = token_state.borrow();
         if let Some(state) = tokens.get(&symbol) {
             state.balances.iter()
-                .map(|(account, balance)| (account.clone(), balance.clone()))
+                .map(|(account, balance)| AccountBalance {
+                    account: account.clone(),
+                    balance: balance.clone(),
+                })
                 .collect()
         } else {
             Vec::new()
         }
     })
 }
+
 #[query]
 pub fn icrc2_get_all_records()->APIResponse{
    let records = TOKEN_STATE.with(|t|{
