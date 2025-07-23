@@ -24,4 +24,6 @@ dist/
 # environment variables
 .env
 .env
-.deps/
+
+
+deps/
