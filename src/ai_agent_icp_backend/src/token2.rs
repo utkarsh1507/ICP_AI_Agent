@@ -345,16 +345,13 @@ pub fn icrc2_transfer(symbol : String,args: TransferArgs) -> TransferResult {
 }
 
 #[update]
-pub fn icrc2_mint(to: Account, amount: Nat,symbol : String) -> TransferResult {
+pub fn icrc2_mint(to: Account, amount: Nat,symbol : String) -> APIResponse {
     let caller_principal = msg_caller();
     TOKEN_STATE.with(|token_state| {
         let mut tokens = token_state.borrow_mut();
         if let Some(state) = tokens.get_mut(&symbol) {
             if state.minting_account.owner != caller_principal {
-                return TransferResult::Err(TransferError::GenericError {
-                    error_code: Nat::from(1u64),
-                    message: "Not authorized to mint tokens".to_string(),
-                });
+                return APIResponse::Text("Not authorized to mint tokens".to_string());
             }
             let recipient_balance = state.balances.get(&to).cloned().unwrap_or_else(|| Nat::from(0u64));
             let new_recipient_balance = recipient_balance + amount.clone();
@@ -373,7 +370,7 @@ pub fn icrc2_mint(to: Account, amount: Nat,symbol : String) -> TransferResult {
             };
             state.transactions.push(transaction);
             debug_print(format!("Minted {} tokens to {}", amount, to.owner.to_string()));
-            TransferResult::Ok(Nat::from(tx_id))
+            APIResponse::Text(format!("Minted {} tokens to {}", amount, to.owner.to_string()))
         } else {
             ic_cdk::trap("Token not initialized");
         }
