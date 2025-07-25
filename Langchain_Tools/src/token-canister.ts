@@ -2,16 +2,15 @@ import { Actor, ActorSubclass, HttpAgent } from "@dfinity/agent";
 import {idlFactory} from "../../src/declarations/ai_agent_icp_backend/index.js";
 import { Principal } from "@dfinity/principal";
 interface Account {
-  owner: Principal;
+  owner: string;
   subaccount?: Uint8Array | null;
 }
 
-type TransferResult = { Ok: bigint } | { Err: any };
 export interface TokenCanister {
   icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint,fee : bigint)=>Promise<boolean>;
-  icrc2_metadata :(symbol : string) =>Promise<MetaData>;
-  icrc2_get_all_records : () => Promise<AllToken>;
-  icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array] }, amount: bigint, symbol: string) => Promise<TransferResult>;
+  icrc2_metadata :(symbol : string) =>Promise<APIResponse>;
+  icrc2_get_all_records : () => Promise<APIResponse>;
+  icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array]}, amount: bigint, symbol: string) => Promise<APIResponse>;
 }
 interface CreateTokenArgs{
     name: string;
@@ -23,12 +22,16 @@ interface CreateTokenArgs{
     fee: bigint;
 }
 
-
+interface APIResponse {
+  Text : string;
+  PairList : [string, string];
+}
+/*
 type TokenMetaData = [string,string];
 type MetaData = TokenMetaData[];
 
 type TokenData =[string,string];
-type AllToken = TokenData[]
+type AllToken = TokenData[]*/
 export class TokenCanisterClient{
     private actor : ActorSubclass<TokenCanister>;
     constructor(actor : any){
@@ -39,7 +42,7 @@ export class TokenCanisterClient{
         try {
             const agent = await HttpAgent.create({host});
 
-            if(host.includes("localhost")){
+            if(typeof host === 'string' && host.includes("localhost")){
                 await agent.fetchRootKey();
                 console.log("Root key fetched for local development");
             }
@@ -64,24 +67,21 @@ export class TokenCanisterClient{
     async get_all_tokens(){
         return await this.actor.icrc2_get_all_records();
     }
-   /*async icrc2_mint(
-  to: { owner: string; subaccount?: string },
-  amount: bigint,
-  symbol: string
-): Promise<TransferResult> {
-  const formattedAccount: {
-    owner: Principal;
-    subaccount: [Uint8Array] | [];
-  } = {
-    owner: Principal.fromText(to.owner),
-    subaccount:
-      typeof to.subaccount === 'string' && to.subaccount.trim() !== ''
-        ? [Uint8Array.from(Buffer.from(to.subaccount, 'hex'))]
-        : [],
-  };
-
-  return await this.actor.icrc2_mint(formattedAccount, amount, symbol);
-}*/
+    async mint_token(to: Account, amount: bigint, symbol: string) {
+      if(to?.subaccount && Array.isArray(to.subaccount)){
+        if(to.subaccount.length === 0){
+            to.subaccount = null;
+        }else{
+          const bytes = Uint8Array.from(to.subaccount.map((b : string) => parseInt(b)));
+          to.subaccount = bytes;
+        }
+      }
+    const formattedTo: { owner: Principal; subaccount: [] | [Uint8Array] } = {
+        owner: Principal.fromText(to.owner),
+        subaccount: to.subaccount ? [to.subaccount] as [Uint8Array] : [],
+    };
+    return await this.actor.icrc2_mint(formattedTo, amount, symbol);
+}
 
 }
 

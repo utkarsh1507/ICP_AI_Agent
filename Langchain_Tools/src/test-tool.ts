@@ -54,42 +54,42 @@ const get_all_tokens_tool = {
     }
 }
 
-
-/*const mint_token_tool = {
+const mint_token_tool = {
     type : 'function',
     function : {
         name : 'icrc2_mint',
-        description : 'Mints a new token to the given account',
+        description : 'Mints new tokens to the specified account',
         parameters : {
             type : 'object',
             required : ['to', 'amount', 'symbol'],
             properties : {
-                to: {
-                    type: 'object',
-                    properties: {
-                        owner: { type: 'string', description: 'Owner of the account' },
-                        subaccount: { type: 'string', description: 'Subaccount of the account' }
+                to : {
+                    type : 'object',
+                    required : ['owner'],
+                    properties : {
+                        owner : {type : 'string', description : 'Principal of the owner'},
+                        subaccount : {type : ['array','null'], items: {type: 'string'}, description: 'Subaccount of the owner'}
                     },
-                    required: ['owner']
+                    description : 'Account to which tokens will be minted'
                 },
-                amount: { type: 'number', description: 'Amount of tokens to mint' },
-                symbol: { type: 'string', description: 'Symbol of the token' }
+                amount : {type : 'number', description : 'Amount of tokens to mint'},
+                symbol : {type : 'string', description : 'Symbol of the token'}
             }
         }
-
-}}*/
+    }
+}
 export async function runTokenCanisterTool(content: string) : Promise<any>{
    
     const availableFunctions = {
         create_token :tokenCanister?.create_token.bind(tokenCanister),
         get_token_metadata : tokenCanister?.get_token_metadata.bind(tokenCanister),
         get_all_tokens : tokenCanister?.get_all_tokens.bind(tokenCanister),
-        //icrc2_mint : tokenCanister?.icrc2_mint.bind(tokenCanister)
+        icrc2_mint : tokenCanister?.mint_token.bind(tokenCanister)
     }
     const response = await together.chat.completions.create({
         model : 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
         messages : [ {role : 'user' , content : content}],
-        tools :[create_token_tool,token_metadata_tool,get_all_tokens_tool],
+        tools :[create_token_tool,token_metadata_tool,get_all_tokens_tool,mint_token_tool],
         tool_choice : 'auto'
     });
 
@@ -109,7 +109,7 @@ export async function runTokenCanisterTool(content: string) : Promise<any>{
             }else{
                 console.warn(`Function ${tool.function.name} is not present`);
             }
-            //return output;
+            
             
         }
 
