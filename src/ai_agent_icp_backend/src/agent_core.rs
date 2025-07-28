@@ -1,5 +1,5 @@
 use ic_cdk::api::{ msg_caller, time};
-use ic_cdk_macros::{init, query, update};
+use ic_cdk_macros::{ query, update};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -47,8 +47,8 @@ thread_local! {
     })
 }*/
 
-#[init]
-pub fn init() {
+#[update]
+pub fn initialize_agent() {
     let agent = Agent {
         owner: ic_cdk::api::msg_caller(),
         tasks: VecDeque::new(),
@@ -60,7 +60,8 @@ pub fn init() {
 }
 
 #[update]
-pub fn create_task(id: u64, data: String, frequency: u64)  {
+pub fn create_task(id : u64,data: String, frequency: u64)  {
+    
     AGENT.with(|a| {
         if let Some(agent) = &mut *a.borrow_mut() {
             // Check for duplicate ID

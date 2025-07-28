@@ -117,4 +117,7 @@ service : {
     }) query;
     icrc2_metadata :(text) -> (APIResponse);
     icrc2_get_all_records : () -> (APIResponse);
+
+    initialize_agent : ()-> ();
+    
 };

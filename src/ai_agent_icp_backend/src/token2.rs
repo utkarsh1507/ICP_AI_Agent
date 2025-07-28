@@ -138,7 +138,7 @@ pub enum APIResponse{
     PairList(Vec<(String,String)>)
 }
 thread_local! {
-    static TOKEN_STATE: RefCell<HashMap<String,TokenState>> = RefCell::new(HashMap::new());
+   pub static TOKEN_STATE: RefCell<HashMap<String,TokenState>> = RefCell::new(HashMap::new());
 }
 
 #[update]
