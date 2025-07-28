@@ -1,7 +1,7 @@
 mod agent_core;
 mod token;
 mod token2;
-
+pub use token2::*;
 pub use agent_core::*;
 pub use token::{
 	TransferArgs, TransferError, TransferResult, Metadata, TokenState, Transaction
