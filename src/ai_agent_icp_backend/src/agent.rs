@@ -1,21 +1,28 @@
 
-use candid::CandidType;
-use ic_cdk::update;
+use std::{cell::RefCell, collections::BTreeMap};
+
+use candid::{CandidType, Principal};
+use ic_cdk::{update};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+
+thread_local! {
+    static AGENTS: RefCell<BTreeMap<u64, AgentConfig>> = RefCell::new(BTreeMap::new());
+    static USER_AGENTS: RefCell<BTreeMap<Principal, Vec<u64>>> = RefCell::new(BTreeMap::new());
+}
 use crate::agent_config::{AgentConfig, Schedule};
 #[derive(Debug,Deserialize,Serialize,CandidType)]
 pub struct AgentConfigParam{
     pub name : String,
     pub description : String,
-    pub owner : String,
+    pub owner : Principal,
     pub schedule : Schedule,
     pub tasks : Vec<crate::agent_config::Task>
 }
 #[update]
 pub fn create_agent(args : AgentConfigParam) -> Result<AgentConfig,String>{
-    let agent_id = Uuid::new_v4().as_u128() as u64;
+    let agent_id = Uuid::new_v4().as_u64_pair().0;
     let created_at = chrono::Utc::now().timestamp();
     let next_run = match args.schedule{
         Schedule::Interval { interval_days }=>{
@@ -33,5 +40,13 @@ pub fn create_agent(args : AgentConfigParam) -> Result<AgentConfig,String>{
         created_at,
         next_run
     };
+    AGENTS.with(|agents| {
+        let mut agents = agents.borrow_mut();
+        agents.insert(agent_id.clone(), agent_config.clone());
+    });
+    USER_AGENTS.with(|user_agents| {
+        let mut user_agents = user_agents.borrow_mut();
+        user_agents.entry(args.owner.clone()).or_default().push(agent_id);
+    });
     Ok(agent_config)
 }
