@@ -11,7 +11,7 @@ thread_local! {
     static AGENTS: RefCell<BTreeMap<u64, AgentConfig>> = RefCell::new(BTreeMap::new());
     static USER_AGENTS: RefCell<BTreeMap<Principal, Vec<u64>>> = RefCell::new(BTreeMap::new());
 }
-use crate::agent_config::{AgentConfig, Schedule};
+use crate::{agent_config::{AgentConfig, Schedule}};
 #[derive(Debug,Deserialize,Serialize,CandidType)]
 pub struct AgentConfigParam{
     pub name : String,
@@ -50,3 +50,29 @@ pub fn create_agent(args : AgentConfigParam) -> Result<AgentConfig,String>{
     });
     Ok(agent_config)
 }
+
+
+#[update]
+pub fn invoke_agent(agent_id : u64)-> Result<(),String>{
+    AGENTS.with(|agents|{
+        let agents= agents.borrow();
+        if let Some(agent) = agents.get(&agent_id){
+            ic_cdk::println!("Invoking agent with name {} and ID {}",agent.name , agent.agent_id);
+        }
+        Ok(())
+    })
+}
+#[update]
+pub fn invoke_user_agents(user : Principal) ->Result<(),String>{
+    USER_AGENTS.with(|agents|{
+        let agents = agents.borrow();
+        if let Some(agent_ids) = agents.get(&user){
+            for agent_id in agent_ids.iter(){
+                ic_cdk::println!("Calling agent with ID {}",agent_id);
+                invoke_agent(*agent_id)?;
+            }
+        }
+        Ok(())
+    })
+}
+
