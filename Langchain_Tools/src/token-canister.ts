@@ -44,7 +44,7 @@ interface CreateTokenArgs{
     logo?: string;
     total_supply: bigint;
     fee: bigint;
-    schedule : Schedule;
+    schedule? : Schedule;
 }
 
 interface APIResponse {
@@ -79,17 +79,22 @@ export class TokenCanisterClient{
     }
 
     async create_token(args : CreateTokenArgs){
-        const agent = this.actor.create_agent({
-            agent_id : 0,
-            name : "Create Token Agent",
-            description : "This agent is used to create tokens and schedule token creation on regular intervals",
-            owner : Principal.fromText("aaaaa-aa"),
-            schedule : args.schedule,
-            tasks : [],
-            prompts : `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.total_supply} and fee ${args.fee}`,
-            created_at : Date.now(),
-            next_run : Date.now() + 1000 * 60 * 60 * 24 // 1 day later
-        } as AgentConfig);
+        if(args.schedule && args.schedule.type === 'interval'){
+
+            const agent = this.actor.create_agent({
+                agent_id : 0,
+                name : "Create Token Agent",
+                description : "This agent is used to create tokens and schedule token creation on regular intervals",
+                owner : Principal.fromText("aaaaa-aa"),
+                schedule : args.schedule,
+                tasks : [],
+                prompts : `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.total_supply} and fee ${args.fee}`,
+                created_at : Date.now(),
+                next_run : Date.now() + 1000 * 60 * 60 * 24 // 1 day later
+            } as AgentConfig);
+            console.log("Created agent for token creation", agent);
+
+        }
         return await this.actor.icrc2_init(args.name , args.symbol,args.decimals,args.description ? [args.description] : [],args.logo? [args.logo] : [],BigInt(args.total_supply),BigInt(args.fee));
     }
     async get_token_metadata(args : CreateTokenArgs){
