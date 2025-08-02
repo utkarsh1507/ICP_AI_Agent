@@ -104,6 +104,7 @@ pub fn heartbeat(){
 
 use std::{cell::RefCell, collections::BTreeMap};
 
+use candid::Principal;
 use ic_cdk::{query, update};
 
 use crate::agent_config::AgentConfig;
@@ -111,6 +112,7 @@ use crate::agent_config::AgentConfig;
 
 thread_local! {
     static AGENTS : RefCell<BTreeMap<u64, AgentConfig>> = RefCell::new(BTreeMap::new());
+    static USER_AGENTS : RefCell<BTreeMap<Principal,Vec<u64>>> = RefCell::new(BTreeMap::new());
 }
 
 
@@ -132,6 +134,10 @@ pub fn create_agent(args : AgentConfig) -> Result<AgentConfig, String>{
             created_at: args.created_at.clone(), 
             prompt: args.prompt.clone(),
             next_run: args.next_run.clone()});
+        USER_AGENTS.with(|user_agents|{
+            let mut user_agents = user_agents.borrow_mut();
+            user_agents.entry(args.owner.clone()).or_default().push(args.agent_id);
+        });
 
         Ok(args)
     })
@@ -142,5 +148,21 @@ pub fn create_agent(args : AgentConfig) -> Result<AgentConfig, String>{
 pub fn get_all_agents()-> BTreeMap<u64, AgentConfig> {
     AGENTS.with(|agents| {
         agents.borrow().clone()
+    })
+}
+
+#[query]
+pub fn get_user_agents(user :Principal) ->Result<Vec<AgentConfig>,String>{
+    USER_AGENTS.with(|user_agents|{
+        let user_agents = user_agents.borrow();
+        if let Some(agent_ids) = user_agents.get(&user){
+            let agents = AGENTS.with(|agents|{
+                let agents = agents.borrow();
+                agent_ids.iter().filter_map(|id| agents.get(id).cloned()).collect()
+            });
+            Ok(agents)
+        }else{
+            Err(format!("User {} has no agents",user))
+        }
     })
 }

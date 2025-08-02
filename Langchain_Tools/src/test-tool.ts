@@ -87,11 +87,24 @@ export async function runTokenCanisterTool(content: string) : Promise<any>{
         icrc2_mint : tokenCanister?.mint_token.bind(tokenCanister)
     }
     const response = await together.chat.completions.create({
-        model : 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
-        messages : [{role : 'user' , content : content}],
-        tools :[create_token_tool,token_metadata_tool,get_all_tokens_tool,mint_token_tool],
-        tool_choice : 'auto'
-    });
+  model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+  messages: [
+    { role: 'system', content: `You are an AI assistant integrated with tools that interact with a token canister. 
+Your main responsibility is to create agents when a time interval is mentioned in the user's prompt.
+Whenever time intervals are mentioned you should generate a schedule in this format: 
+{"type" : "interval", "interval_days_in_seconds" :<time_in_seconds>} 
+If no interval is specified, use the other tools to assist the user appropriately.` },
+    { role: 'user', content: content }
+  ],
+  tools: [
+    create_token_tool,
+    token_metadata_tool,
+    get_all_tokens_tool,
+    mint_token_tool
+  ],
+  tool_choice: 'auto'
+});
+
 
     let output :any[] = [];
     const tool_calls = response.choices[0]?.message?.tool_calls;

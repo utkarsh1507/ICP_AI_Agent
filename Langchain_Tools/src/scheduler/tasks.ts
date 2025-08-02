@@ -1,4 +1,4 @@
-import { run } from "node:test";
+
 import { SimpleIntervalJob, Task, ToadScheduler } from "toad-scheduler";
 import { app, tokenCanister } from "../server";
 import { runTokenCanisterTool } from "../test-tool";
@@ -16,13 +16,40 @@ export async function runTasks() {
       interval_days_in_seconds: 5,
       prompt: "Create token",
     },
+    {
+      id: 2,
+      name: "Create Token Agent with time 1 second",
+      description:
+        "This agent is used to create tokens and schedule token creation on regular intervals",
+      owner: "aaaaa-aa",
+      interval_days_in_seconds: 1,
+      prompt: "Create token",
+    },
+    {
+      id: 3,
+      name: "Create Token Agent with time 9 seconds",
+      description:
+        "This agent is used to create tokens and schedule token creation on regular intervals",
+      owner: "aaaaa-aa",
+      interval_days_in_seconds: 9,
+      prompt: "Create token",
+    },
+    {
+      id: 4,
+      name: "Create Token Agent with time 15 seconds",
+      description:
+        "This agent is used to create tokens and schedule token creation on regular intervals",
+      owner: "aaaaa-aa",
+      interval_days_in_seconds: 15,
+      prompt: "Create token",
+    },
   ];
   agents.forEach((agent) => {
     const task = new Task(
       `${agent.name}-${agent.id}-${Date.now()}`,
       async () => {
         console.log(`Running task for agent ${agent.name} with id ${agent.id}`);
-        app.post("/api/prompt", async (req, res) => {
+        /*app.post("/api/prompt", async (req, res) => {
           try {
             const prompt = agent.prompt;
             const response = await runTokenCanisterTool(prompt);
@@ -34,9 +61,10 @@ export async function runTasks() {
             console.log(`Error occurred ${error}`);
             return res.send(400).json(error);
           }
-        });
+        });*/
       }
     );
+    
     const job = new SimpleIntervalJob(
       { seconds: agent.interval_days_in_seconds },
       task
