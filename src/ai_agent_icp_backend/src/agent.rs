@@ -104,7 +104,7 @@ pub fn heartbeat(){
 
 use std::{cell::RefCell, collections::BTreeMap};
 
-use ic_cdk::update;
+use ic_cdk::{query, update};
 
 use crate::agent_config::AgentConfig;
 
@@ -130,8 +130,17 @@ pub fn create_agent(args : AgentConfig) -> Result<AgentConfig, String>{
             schedule: args.schedule.clone(), 
             tasks: args.tasks.clone(), 
             created_at: args.created_at.clone(), 
+            prompt: args.prompt.clone(),
             next_run: args.next_run.clone()});
 
         Ok(args)
+    })
+}
+
+
+#[query]
+pub fn get_all_agents()-> BTreeMap<u64, AgentConfig> {
+    AGENTS.with(|agents| {
+        agents.borrow().clone()
     })
 }

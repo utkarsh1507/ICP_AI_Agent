@@ -13,7 +13,8 @@ export interface AgentConfig {
   schedule: Schedule;
   tasks: Task[];
   created_at: number; 
-  next_run?: number;  
+  next_run?: number; 
+  prompts : string 
 }
 
 export type Schedule =
@@ -24,12 +25,16 @@ export interface Task {
   tool: string;
   params: string;
 }
+export type GetAllAgentsResponse = {
+  [key: string]: AgentConfig;
+};
 export interface TokenCanister {
   icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint,fee : bigint)=>Promise<boolean>;
   icrc2_metadata :(symbol : string) =>Promise<APIResponse>;
   icrc2_get_all_records : () => Promise<APIResponse>;
   icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array]}, amount: bigint, symbol: string) => Promise<APIResponse>;
   create_agent : (args : AgentConfig) =>Promise<{Ok : AgentConfig} | {Err : string}>;
+  get_all_agents : ()=> Promise<GetAllAgentsResponse>;
 }
 interface CreateTokenArgs{
     name: string;
@@ -81,6 +86,7 @@ export class TokenCanisterClient{
             owner : Principal.fromText("aaaaa-aa"),
             schedule : args.schedule,
             tasks : [],
+            prompts : `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.total_supply} and fee ${args.fee}`,
             created_at : Date.now(),
             next_run : Date.now() + 1000 * 60 * 60 * 24 // 1 day later
         } as AgentConfig);
@@ -110,6 +116,10 @@ export class TokenCanisterClient{
 }
     async create_agent(args : AgentConfig) : Promise<{Ok : AgentConfig} | {Err : string}>{
         return await this.actor.create_agent(args);
+    }
+
+    async get_all_agents() : Promise<GetAllAgentsResponse>{
+        return await this.actor.get_all_agents();
     }
 
 
