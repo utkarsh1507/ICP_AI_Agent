@@ -1,8 +1,8 @@
 
-use std::{cell::RefCell, collections::BTreeMap};
+/*use std::{cell::RefCell, collections::BTreeMap};
 
 use candid::{CandidType, Principal};
-use ic_cdk::{update};
+use ic_cdk::{ update};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -76,3 +76,62 @@ pub fn invoke_user_agents(user : Principal) ->Result<(),String>{
     })
 }
 
+/*#[heartbeat]
+pub fn heartbeat(){
+    let now = chrono::Utc::now().timestamp();
+    AGENTS.with(|agents|{
+        let mut agents = agents.borrow_mut();
+        for agent in agents.values_mut(){
+            if let Some(next_run) = agent.next_run{
+                if next_run <= now{
+                    invoke_agent(agent.agent_id).unwrap_or_else(|err| {
+                        ic_cdk::println!("Error invoking agent {}: {}", agent.agent_id, err);
+                        agent.next_run = Some(now + 60);
+                    });
+                    agent.next_run = match agent.schedule {
+                        Schedule::Interval { interval_days }=>{
+                            Some(now + chrono::Duration::days(interval_days as i64).num_seconds())
+                        }
+                        Schedule::Cron { expression: _ } => {
+                            None
+                        }
+                    }
+                }
+            }
+        }
+    })
+}*/*/
+
+use std::{cell::RefCell, collections::BTreeMap};
+
+use ic_cdk::update;
+
+use crate::agent_config::AgentConfig;
+
+
+thread_local! {
+    static AGENTS : RefCell<BTreeMap<u64, AgentConfig>> = RefCell::new(BTreeMap::new());
+}
+
+
+#[update]
+pub fn create_agent(args : AgentConfig) -> Result<AgentConfig, String>{
+    AGENTS.with(|agents| {
+        let mut agents = agents.borrow_mut();
+        if agents.contains_key(&args.agent_id){
+            return Err(format!("Agent with ID {} already exists", args.agent_id));
+        }
+        agents.insert(args.agent_id, 
+            AgentConfig { 
+            agent_id: args.agent_id.clone(), 
+            name: args.name.clone(), 
+            description: args.description.clone(), 
+            owner: args.owner.clone(), 
+            schedule: args.schedule.clone(), 
+            tasks: args.tasks.clone(), 
+            created_at: args.created_at.clone(), 
+            next_run: args.next_run.clone()});
+
+        Ok(args)
+    })
+}

@@ -88,7 +88,7 @@ export async function runTokenCanisterTool(content: string) : Promise<any>{
     }
     const response = await together.chat.completions.create({
         model : 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
-        messages : [ {role : 'user' , content : content}],
+        messages : [{role : 'user' , content : content}],
         tools :[create_token_tool,token_metadata_tool,get_all_tokens_tool,mint_token_tool],
         tool_choice : 'auto'
     });

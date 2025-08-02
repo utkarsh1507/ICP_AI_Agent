@@ -5,12 +5,31 @@ interface Account {
   owner: string;
   subaccount?: Uint8Array | null;
 }
+export interface AgentConfig {
+  agent_id: number; // u64
+  name: string;
+  description: string;
+  owner: Principal;
+  schedule: Schedule;
+  tasks: Task[];
+  created_at: number; 
+  next_run?: number;  
+}
 
+export type Schedule =
+  | { type: 'interval'; interval_days: number }
+  | { type: 'cron'; expression: string };
+
+export interface Task {
+  tool: string;
+  params: string;
+}
 export interface TokenCanister {
   icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint,fee : bigint)=>Promise<boolean>;
   icrc2_metadata :(symbol : string) =>Promise<APIResponse>;
   icrc2_get_all_records : () => Promise<APIResponse>;
   icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array]}, amount: bigint, symbol: string) => Promise<APIResponse>;
+  create_agent : (args : AgentConfig) =>Promise<{Ok : AgentConfig} | {Err : string}>;
 }
 interface CreateTokenArgs{
     name: string;
@@ -20,18 +39,15 @@ interface CreateTokenArgs{
     logo?: string;
     total_supply: bigint;
     fee: bigint;
+    schedule : Schedule;
 }
 
 interface APIResponse {
   Text : string;
   PairList : [string, string];
 }
-/*
-type TokenMetaData = [string,string];
-type MetaData = TokenMetaData[];
 
-type TokenData =[string,string];
-type AllToken = TokenData[]*/
+
 export class TokenCanisterClient{
     private actor : ActorSubclass<TokenCanister>;
     constructor(actor : any){
@@ -58,6 +74,16 @@ export class TokenCanisterClient{
     }
 
     async create_token(args : CreateTokenArgs){
+        const agent = this.actor.create_agent({
+            agent_id : 0,
+            name : "Create Token Agent",
+            description : "This agent is used to create tokens and schedule token creation on regular intervals",
+            owner : Principal.fromText("aaaaa-aa"),
+            schedule : args.schedule,
+            tasks : [],
+            created_at : Date.now(),
+            next_run : Date.now() + 1000 * 60 * 60 * 24 // 1 day later
+        } as AgentConfig);
         return await this.actor.icrc2_init(args.name , args.symbol,args.decimals,args.description ? [args.description] : [],args.logo? [args.logo] : [],BigInt(args.total_supply),BigInt(args.fee));
     }
     async get_token_metadata(args : CreateTokenArgs){
@@ -82,6 +108,10 @@ export class TokenCanisterClient{
     };
     return await this.actor.icrc2_mint(formattedTo, amount, symbol);
 }
+    async create_agent(args : AgentConfig) : Promise<{Ok : AgentConfig} | {Err : string}>{
+        return await this.actor.create_agent(args);
+    }
+
 
 }
 
