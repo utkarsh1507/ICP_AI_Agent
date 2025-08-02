@@ -4,7 +4,7 @@ import { TokenCanisterClient } from './token-canister.js';
 import { runTokenCanisterTool } from './test-tool.js';
 import cors from 'cors';
 import { runTasks } from './scheduler/tasks.js';
-const app = express()
+export const app = express()
 app.use(express.json());
 const port = process.env.PORT || 5000;
 app.use(cors());
