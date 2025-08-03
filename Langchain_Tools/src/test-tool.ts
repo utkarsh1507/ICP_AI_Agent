@@ -92,7 +92,7 @@ export async function runTokenCanisterTool(content: string) : Promise<any>{
     { role: 'system', content: `You are an AI assistant integrated with tools that interact with a token canister. 
 Your main responsibility is to create agents when a time interval is mentioned in the user's prompt.
 Whenever time intervals are mentioned you should generate a schedule in this format: 
-{"type" : "interval", "interval_days_in_seconds" :<time_in_seconds>} 
+{"type" : "interval", "interval_days" :<time_in_seconds>} 
 If no interval is specified, use the other tools to assist the user appropriately.` },
     { role: 'user', content: content }
   ],
