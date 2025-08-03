@@ -13,7 +13,7 @@ export async function runTasks() {
       description:
         "This agent is used to create tokens and schedule token creation on regular intervals",
       owner: "aaaaa-aa",
-      interval_days_in_seconds: 5,
+      interval_days: 5,
       prompt: "Create token",
     },
     {
@@ -22,7 +22,7 @@ export async function runTasks() {
       description:
         "This agent is used to create tokens and schedule token creation on regular intervals",
       owner: "aaaaa-aa",
-      interval_days_in_seconds: 1,
+      interval_days: 1,
       prompt: "Create token",
     },
     {
@@ -31,7 +31,7 @@ export async function runTasks() {
       description:
         "This agent is used to create tokens and schedule token creation on regular intervals",
       owner: "aaaaa-aa",
-      interval_days_in_seconds: 9,
+      interval_days: 9,
       prompt: "Create token",
     },
     {
@@ -40,7 +40,7 @@ export async function runTasks() {
       description:
         "This agent is used to create tokens and schedule token creation on regular intervals",
       owner: "aaaaa-aa",
-      interval_days_in_seconds: 15,
+      interval_days: 15,
       prompt: "Create token",
     },
   ];
@@ -66,7 +66,7 @@ export async function runTasks() {
     );
     
     const job = new SimpleIntervalJob(
-      { seconds: agent.interval_days_in_seconds },
+      { seconds: agent.interval_days},
       task
     );
     scheduler.addSimpleIntervalJob(job);
