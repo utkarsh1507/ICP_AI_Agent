@@ -13,15 +13,25 @@ thread_local! {
 
 
 #[update]
-pub fn create_agent(agent_id : u64 , name : String , description : String , schedule :Schedule,tasks : Vec<Task>,created_at : i128,prompt : String, next_run : Option<i128>) -> String{
+pub fn create_agent(name : String , description : String , schedule :Schedule,tasks : Vec<Task>,created_at : i128,prompt : String, next_run : Option<i128>) -> String{
+    let agent_id = AGENTS.with(|agents| {
+        let agents = agents.borrow();
+        let mut id = agents.len() as u64;
+        // Ensure no collision (e.g. after deletion)
+        while agents.contains_key(&id) {
+            id += 1;
+        }
+        id
+    });
     AGENTS.with(|agents| {
         let mut agents = agents.borrow_mut();
+        
         if agents.contains_key(&agent_id){
             return format!("Agent with ID {} already exists", agent_id);
         }
         agents.insert(agent_id, 
             AgentConfig { 
-            agent_id: agent_id.clone(), 
+            agent_id, 
             name: name.clone(), 
             description: description.clone(), 
             owner: msg_caller(), 
