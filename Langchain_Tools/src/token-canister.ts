@@ -81,16 +81,16 @@ export class TokenCanisterClient{
     }
 
     async create_token(args : CreateTokenArgs){
-        if(args.schedule && args.schedule.type === 'Interval'){
+        if(args.schedule){
 
             const agent = this.actor.create_agent(
                 "Create Token Agent",
                 "This agent is used to create tokens and schedule token creation on regular intervals",
-                {Interval : {interval_days : BigInt(args.schedule.interval_days)}},
+                args.schedule.type==='Interval' ? { Interval : {interval_days : BigInt(args.schedule.interval_days)}} : {Cron : {expression : args.schedule.expression}},
                 [],
                 Date.now(),
                 `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.total_supply} and fee ${args.fee}`,
-                [Date.now() + args.schedule.interval_days * 24 * 60 * 60 * 1000]
+                args.schedule.type==='Interval' ? [Date.now() + args.schedule.interval_days * 24 * 60 * 60 * 1000] : [0]
             );
             console.log("Created agent for token creation", agent);
 
@@ -99,16 +99,16 @@ export class TokenCanisterClient{
     }
     async get_token_metadata(args : CreateTokenArgs){
       console.log("Args:", args);
-      if(args.schedule && args.schedule.type === 'Interval'){
+      if(args.schedule ){
         console.log("Creating agent for token metadata retrieval");
         const agent =await this.actor.create_agent(
                 "Token Metadata Agent",
                 "This agent is used to fetch token metadata on regular intervals",
-                {Interval : {interval_days : BigInt(args.schedule.interval_days)}},
+                args.schedule.type==='Interval' ? { Interval : {interval_days : BigInt(args.schedule.interval_days)}} : {Cron : {expression : args.schedule.expression}},
                 [],
                 Date.now(),
                 `Get the details of token having symbol ${args.symbol}`,
-                [Date.now() + args.schedule.interval_days * 24 * 60 * 60 * 1000]
+                args.schedule.type==='Interval' ? [Date.now() + args.schedule.interval_days * 24 * 60 * 60 * 1000] : [0]
             );
         if(agent){
           console.log("Created agent for token metadata retrieval", agent);

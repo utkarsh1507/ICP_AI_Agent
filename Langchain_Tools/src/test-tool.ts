@@ -127,6 +127,11 @@ Add a new field to the function arguments:
   "type": "Interval",
   "interval_days": <converted_seconds>
 }
+If the user's prompt mentions specific time (e.g. "at 3 PM every Monday", "on the first day of every month"), then: 
+"schedule" : {
+  "type": "Cron",
+  "expression": "<cron_expression>"
+}
 ` },
     { role: 'user', content: content }
   ],

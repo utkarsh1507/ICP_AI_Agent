@@ -1,6 +1,6 @@
 
 import { SimpleIntervalJob, Task, ToadScheduler } from "toad-scheduler";
-import { app, tokenCanister } from "../server";
+import { app, tokenCanister } from "../server.js";
 import { runTokenCanisterTool } from "../test-tool";
 
 const scheduler = new ToadScheduler();
@@ -72,4 +72,14 @@ export async function runTasks() {
     scheduler.addSimpleIntervalJob(job);
     console.log(`Added job for agent ${agent.name} with id ${agent.id}`);
   });
+}
+
+
+export async function get_all_agents(){
+    const agents = await tokenCanister?.get_all_agents();
+    if(!agents){
+        console.error("Failed to fetch agents from token canister");
+        return [];
+    }
+    return agents;
 }
