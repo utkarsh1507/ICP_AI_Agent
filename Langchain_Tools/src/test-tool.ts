@@ -115,7 +115,9 @@ export async function runTokenCanisterTool(content: string) : Promise<any>{
     const response = await together.chat.completions.create({
   model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
   messages: [
-    { role: 'system', content: `You are an AI assistant integrated with tools that interact with a token canister.
+   { 
+  role: 'system', 
+  content: `You are an AI assistant integrated with tools that interact with a token canister.
 
 Your job is to parse user prompts and call the appropriate function tool using valid arguments.
 
@@ -127,12 +129,28 @@ Add a new field to the function arguments:
   "type": "Interval",
   "interval_days": <converted_seconds>
 }
-If the user's prompt mentions specific time (e.g. "at 3 PM every Monday", "on the first day of every month"), then: 
-"schedule" : {
+
+If the user's prompt mentions a specific time (e.g. "at 3 PM every Monday", "at 10:20 PM Tuesday"), convert it to a cron expression in strict 5-field format:
+
+"schedule": {
   "type": "Cron",
   "expression": "<cron_expression>"
 }
-` },
+
+🟢 Format rules (very important):
+- Use 24-hour format (e.g., 11 PM = 23, 1 AM = 1)
+- Use this exact cron format: MIN HOUR DAY_OF_MONTH MONTH DAY_OF_WEEK
+  - MINUTE: 0-59
+  - HOUR: 0-23
+  - DAY_OF_MONTH: 1-31 or "*"
+  - MONTH: 1-12 or "*"
+  - DAY_OF_WEEK: 0-6 (Sunday = 0, Monday = 1, ..., Saturday = 6)
+
+🧠 Example conversions:
+- "Every Tuesday at 11 PM" → 0 23 * * 2
+- "10:15 AM every Friday" → 15 10 * * 5`
+}
+,
     { role: 'user', content: content }
   ],
   tools: [
