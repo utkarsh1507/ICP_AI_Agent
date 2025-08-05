@@ -9,15 +9,14 @@ pub struct AgentConfig{
     pub owner : Principal,
     pub schedule : Schedule,
     pub tasks : Vec<Task>,
-    pub created_at : i64,
+    pub created_at : i128,
     pub prompt : String,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub next_run : Option<i64>,
+    pub next_run : Option<i128>,
 }
 
 #[derive(Debug, Serialize, Deserialize,CandidType,Clone)]
-#[serde(tag = "type", rename_all = "snake_case")]
 pub enum Schedule {
     Interval{interval_days : u64},
     Cron{expression : String}
@@ -27,3 +26,4 @@ pub struct Task{
     pub tool : String,
     pub params : String
 }
+
