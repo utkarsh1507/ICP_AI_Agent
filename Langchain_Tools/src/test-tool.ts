@@ -78,13 +78,39 @@ const mint_token_tool = {
         }
     }
 }
+const transfer_token_tool = {
+    type : 'function',
+    function : {
+        name : 'icrc2_transfer',
+        description : 'Transfers tokens from the caller to the specified account.',
+        parameters : {
+            type : 'object',
+            required : ['to', 'amount', 'symbol'],
+            properties : {
+                to : {
+                    type : 'object',
+                    required : ['owner'],
+                    properties : {
+                        owner : {type : 'string', description : 'Principal of the recipient account.'},
+                        subaccount : {type : ['array','null'], items: {type: 'string'}, description: 'Optional subaccount of the recipient.'}
+                    },
+                    description : 'The account to which tokens will be transferred.'
+                },
+                amount : {type : 'number', description : 'The amount of tokens to transfer.'},
+                symbol : {type : 'string', description : 'The symbol of the token to transfer.'}
+            }
+        }
+    }
+}
+
 export async function runTokenCanisterTool(content: string) : Promise<any>{
    
     const availableFunctions = {
         create_token :tokenCanister?.create_token.bind(tokenCanister),
         get_token_metadata : tokenCanister?.get_token_metadata.bind(tokenCanister),
         get_all_tokens : tokenCanister?.get_all_tokens.bind(tokenCanister),
-        icrc2_mint : tokenCanister?.mint_token.bind(tokenCanister)
+        mint_token : tokenCanister?.mint_token.bind(tokenCanister),
+        transfer_token : tokenCanister?.transfer_token.bind(tokenCanister)
     }
     const response = await together.chat.completions.create({
   model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
@@ -100,7 +126,8 @@ If no interval is specified, use the other tools to assist the user appropriatel
     create_token_tool,
     token_metadata_tool,
     get_all_tokens_tool,
-    mint_token_tool
+    mint_token_tool,
+    transfer_token_tool
   ],
   tool_choice: 'auto'
 });

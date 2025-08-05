@@ -35,6 +35,7 @@ export interface TokenCanister {
   icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array]}, amount: bigint, symbol: string) => Promise<APIResponse>;
   create_agent : (args : AgentConfig) =>Promise<{Ok : AgentConfig} | {Err : string}>;
   get_all_agents : ()=> Promise<GetAllAgentsResponse>;
+  transfer_token: (tokenId: string, to: Principal, amount: bigint) => Promise<boolean>;
 }
 interface CreateTokenArgs{
     name: string;
@@ -103,6 +104,9 @@ export class TokenCanisterClient{
 
     async get_all_tokens(){
         return await this.actor.icrc2_get_all_records();
+    }
+    async transfer_token(tokenId: string, to: Principal, amount: bigint): Promise<boolean> {
+        return await this.actor.transfer_token(tokenId, to, amount);
     }
     async mint_token(to: Account, amount: bigint, symbol: string) {
       if(to?.subaccount && Array.isArray(to.subaccount)){
