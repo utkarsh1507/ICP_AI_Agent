@@ -514,3 +514,24 @@ pub fn icrc2_get_all_records()->APIResponse{
     });
     APIResponse::PairList(records)
 }
+
+
+#[query]
+pub fn my_tokens () -> APIResponse{
+    let caller = msg_caller();
+    let tokens = TOKEN_STATE.with(|t|{
+        t.borrow()
+        .iter()
+        .filter_map(
+            |(symbol,state)| {
+                if state.metadata.owner == caller {
+                    Some((symbol.clone(),state.metadata.name.clone()))
+                } else {
+                    None
+                }
+            }
+        )
+        .collect()
+    });
+    APIResponse::PairList(tokens)
+}
