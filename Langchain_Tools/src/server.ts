@@ -13,7 +13,7 @@ export let tokenCanister : TokenCanisterClient | null = null;
 (async ()=> {
 
    tokenCanister = await create_token_canister();
-   runTasks().then(() => console.log("Tasks are running...")).catch(err => console.error("Error running tasks:", err));
+   //runTasks().then(() => console.log("Tasks are running...")).catch(err => console.error("Error running tasks:", err));
    if(!tokenCanister){
     console.error("------------> Failed to create token canister...... Exiting <-----------");
     process.exit(1);

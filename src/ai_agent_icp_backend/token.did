@@ -136,16 +136,16 @@ service : {
 
     initialize_agent : ()-> ();
     create_agent : (
-        nat64,       // agent_id
-        text,        // name
-        text,        // description
-        Schedule,    // schedule
-        vec Task,    // tasks
-        int,         // created_at
-        text,        // prompt
-        opt int      // next_run
+        text,       
+        text,      
+        Schedule,  
+        vec Task, 
+        int,        
+        text,      
+        opt int     
     ) -> (text) ;
     get_all_agents : () -> (vec record { nat64; AgentConfig }) query;
     get_user_agents : () -> (vec AgentConfig) query;
+    my_tokens : () -> (APIResponse) query;
     
 };

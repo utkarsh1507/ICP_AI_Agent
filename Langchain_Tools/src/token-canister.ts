@@ -8,16 +8,17 @@ interface Account {
 export interface AgentConfig {
   name: string;
   description: string;
-  schedule: Schedule;
+  schedule: AgentSchedule;
   tasks: Task[];
   created_at: number; 
-  next_run?: number; 
   prompts : string 
+  next_run?: [number] | []; 
 }
 
-export type Schedule =
-  | { type: 'interval'; interval_days: number }
-  | { type: 'cron'; expression: string };
+export type AgentSchedule = 
+  | { Interval: { interval_days: bigint } }
+  | { Cron: { expression: string } };
+
 
 export interface Task {
   tool: string;
@@ -31,7 +32,7 @@ export interface TokenCanister {
   icrc2_metadata :(symbol : string) =>Promise<APIResponse>;
   icrc2_get_all_records : () => Promise<APIResponse>;
   icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array]}, amount: bigint, symbol: string) => Promise<APIResponse>;
-  create_agent : (name : string , description : string ,schedule : Schedule , tasks : Task[] , created_at : number , next_run : number , prompt : string ) =>Promise<string>;
+  create_agent : (name : string , description : string ,schedule : AgentSchedule , tasks : Task[] , created_at : number , prompt : string ,next_run : [number] ) =>Promise<string>;
   get_all_agents : ()=> Promise<GetAllAgentsResponse>;
   transfer_token: (tokenId: string, to: Principal, amount: bigint) => Promise<boolean>;
 }
@@ -45,7 +46,9 @@ interface CreateTokenArgs{
     fee: bigint;
     schedule? : Schedule;
 }
-
+type Schedule = 
+  | { type: 'Interval'; interval_days: number }
+  | { type: 'Cron'; expression: string };
 interface APIResponse {
   Text : string;
   PairList : [string, string];
@@ -78,16 +81,16 @@ export class TokenCanisterClient{
     }
 
     async create_token(args : CreateTokenArgs){
-        if(args.schedule && args.schedule.type === 'interval'){
+        if(args.schedule && args.schedule.type === 'Interval'){
 
             const agent = this.actor.create_agent(
                 "Create Token Agent",
                 "This agent is used to create tokens and schedule token creation on regular intervals",
-                args.schedule,
+                {Interval : {interval_days : BigInt(args.schedule.interval_days)}},
                 [],
                 Date.now(),
-                Date.now() + args.schedule.interval_days * 24 * 60 * 60 * 1000,
-                `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.total_supply} and fee ${args.fee}`
+                `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.total_supply} and fee ${args.fee}`,
+                [Date.now() + args.schedule.interval_days * 24 * 60 * 60 * 1000]
             );
             console.log("Created agent for token creation", agent);
 
@@ -95,6 +98,22 @@ export class TokenCanisterClient{
         return await this.actor.icrc2_init(args.name , args.symbol,args.decimals,args.description ? [args.description] : [],args.logo? [args.logo] : [],BigInt(args.total_supply),BigInt(args.fee));
     }
     async get_token_metadata(args : CreateTokenArgs){
+      console.log("Args:", args);
+      if(args.schedule && args.schedule.type === 'Interval'){
+        console.log("Creating agent for token metadata retrieval");
+        const agent =await this.actor.create_agent(
+                "Token Metadata Agent",
+                "This agent is used to fetch token metadata on regular intervals",
+                {Interval : {interval_days : BigInt(args.schedule.interval_days)}},
+                [],
+                Date.now(),
+                `Get the details of token having symbol ${args.symbol}`,
+                [Date.now() + args.schedule.interval_days * 24 * 60 * 60 * 1000]
+            );
+        if(agent){
+          console.log("Created agent for token metadata retrieval", agent);
+        }
+      }
         return await this.actor.icrc2_metadata(args.symbol);
     }
 
@@ -119,8 +138,8 @@ export class TokenCanisterClient{
     };
     return await this.actor.icrc2_mint(formattedTo, amount, symbol);
 }
-    async create_agent(name : string , description : string ,schedule : Schedule , tasks : Task[] , created_at : number , next_run : number , prompt : string ) : Promise<string>{
-        return await this.actor.create_agent(name , description ,schedule , tasks , created_at , next_run , prompt);
+    async create_agent(name : string , description : string ,schedule : AgentSchedule , tasks : Task[] , created_at : number ,prompt : string, next_run : [number]) : Promise<string>{
+        return await this.actor.create_agent(name , description ,schedule , tasks , created_at , prompt ,next_run  );
     }
 
     async get_all_agents() : Promise<GetAllAgentsResponse>{

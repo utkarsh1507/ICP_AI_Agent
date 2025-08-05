@@ -115,11 +115,19 @@ export async function runTokenCanisterTool(content: string) : Promise<any>{
     const response = await together.chat.completions.create({
   model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
   messages: [
-    { role: 'system', content: `You are an AI assistant integrated with tools that interact with a token canister. 
-Your main responsibility is to create agents when a time interval is mentioned in the user's prompt.
-Whenever time intervals are mentioned you should generate a schedule in this format: 
-{"type" : "interval", "interval_days" :<time_in_seconds>} 
-If no interval is specified, use the other tools to assist the user appropriately.` },
+    { role: 'system', content: `You are an AI assistant integrated with tools that interact with a token canister.
+
+Your job is to parse user prompts and call the appropriate function tool using valid arguments.
+
+If the user's prompt mentions a time interval (e.g. "every 10 seconds", "every 2 minutes", "each day"), then:
+
+Add a new field to the function arguments:
+
+"schedule": {
+  "type": "Interval",
+  "interval_days": <converted_seconds>
+}
+` },
     { role: 'user', content: content }
   ],
   tools: [
