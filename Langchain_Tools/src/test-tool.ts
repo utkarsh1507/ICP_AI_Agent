@@ -56,31 +56,49 @@ const get_all_tokens_tool = {
         }
     }
 }
-
 const mint_token_tool = {
-    type : 'function',
-    function : {
-        name : 'icrc2_mint',
-        description : 'Mints new tokens to the specified account',
-        parameters : {
-            type : 'object',
-            required : ['to', 'amount', 'symbol'],
-            properties : {
-                to : {
-                    type : 'object',
-                    required : ['owner'],
-                    properties : {
-                        owner : {type : 'string', description : 'Principal of the owner'},
-                        subaccount : {type : ['array','null'], items: {type: 'string'}, description: 'Subaccount of the owner'}
-                    },
-                    description : 'Account to which tokens will be minted'
-                },
-                amount : {type : 'number', description : 'Amount of tokens to mint'},
-                symbol : {type : 'string', description : 'Symbol of the token'}
+  type: 'function',
+  function: {
+    name: 'icrc2_mint',
+    description: 'Mints new tokens to the specified account',
+    parameters: {
+      type: 'object',
+      required: ['to','amount','symbol','owner'],
+      properties: {
+        to: {
+          type: 'object',
+          required: ['owner'],
+          properties: {
+            owner: { type: 'string', description: 'Principal who will receive the minted tokens' },
+            subaccount: {
+              anyOf: [
+                { type: 'array', items: { type: 'string' } },
+                { type: 'null' }
+              ],
+              description: 'Optional subaccount as an array of byte strings'
             }
+          },
+          description: 'Account to which tokens will be minted'
+        },
+        amount: {
+          type: 'string',
+          description: 'Amount of tokens to mint (passed as a string, will be converted to BigInt)'
+        },
+        symbol: { type: 'string', description: 'Symbol of the token' },
+        owner: { type: 'string', description: 'Principal of the minting account' }
+      },
+      examples: [
+        {
+          to: { owner: 'w7x7r-cok77-xa', subaccount: null },
+          amount: '1000',
+          symbol: 'ABC',
+          owner: 'aaaaa-aa'
         }
+      ]
     }
-}
+  }
+};
+
 const transfer_token_tool = {
     type : 'function',
     function : {

@@ -32,7 +32,7 @@ export interface TokenCanister {
   icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint, owner : Principal,fee : bigint)=>Promise<boolean>;
   icrc2_metadata :(symbol : string) =>Promise<APIResponse>;
   icrc2_get_all_records : () => Promise<APIResponse>;
-  icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array]}, amount: bigint, symbol: string) => Promise<APIResponse>;
+  icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array]}, amount: bigint, symbol: string,owner : Principal) => Promise<APIResponse>;
   create_agent : (name : string , description : string ,schedule : AgentSchedule , tasks : Task[] , created_at : number , prompt : string ,next_run : [number] ) =>Promise<string>;
   get_all_agents : ()=> Promise<GetAllAgentsResponse | undefined>;
   transfer_token: (tokenId: string, to: Principal, amount: bigint) => Promise<boolean>;
@@ -125,7 +125,7 @@ export class TokenCanisterClient{
     async transfer_token(tokenId: string, to: Principal, amount: bigint): Promise<boolean> {
         return await this.actor.transfer_token(tokenId, to, amount);
     }
-    async mint_token(to: Account, amount: bigint, symbol: string) {
+    async mint_token(to: Account, amount: bigint, symbol: string , owner : Principal) {
       if(to?.subaccount && Array.isArray(to.subaccount)){
         if(to.subaccount.length === 0){
             to.subaccount = null;
@@ -138,7 +138,7 @@ export class TokenCanisterClient{
         owner: Principal.fromText(to.owner),
         subaccount: to.subaccount ? [to.subaccount] as [Uint8Array] : [],
     };
-    return await this.actor.icrc2_mint(formattedTo, amount, symbol);
+    return await this.actor.icrc2_mint(formattedTo, amount, symbol,owner);
 }
     async create_agent(name : string , description : string ,schedule : AgentSchedule , tasks : Task[] , created_at : number ,prompt : string, next_run : [number]) : Promise<string>{
         return await this.actor.create_agent(name , description ,schedule , tasks , created_at , prompt ,next_run  );
