@@ -124,6 +124,27 @@ const transfer_token_tool = {
     }
 }
 
+const balance_tool = {
+    type : 'function',
+    function : {
+        name : 'icrc2_balance',
+        description : 'Returns the balance of the specified account for a given token symbol.',
+        parameters : {
+            type : 'object',
+            required : ['owner', 'symbol'],
+            properties : {
+                owner : {type : 'string', description : 'Principal of the account whose balance is being queried.'},
+                symbol : {type : 'string', description : 'Symbol of the token for which the balance is being queried.'}
+            },
+            examples :[
+                {
+                    owner : 'w7x7r-cok77-xa',
+                    symbol : 'ABC'}
+            ]
+        }
+    }
+}
+
 export async function runTokenCanisterTool(content: string,owner : Principal) : Promise<any>{
     const prompt = content + ' Owner will be '+ owner.toString();;
     const availableFunctions = {
@@ -131,7 +152,8 @@ export async function runTokenCanisterTool(content: string,owner : Principal) : 
         get_token_metadata : tokenCanister?.get_token_metadata.bind(tokenCanister),
         get_all_tokens : tokenCanister?.get_all_tokens.bind(tokenCanister),
         icrc2_mint : tokenCanister?.mint_token.bind(tokenCanister),
-        transfer_token : tokenCanister?.transfer_token.bind(tokenCanister)
+        transfer_token : tokenCanister?.transfer_token.bind(tokenCanister),
+        icrc2_balance_of : tokenCanister?.icrc2_balance_of.bind(tokenCanister)
     }
     const response = await together.chat.completions.create({
   model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
@@ -180,7 +202,8 @@ If the user's prompt mentions a specific time (e.g. "at 3 PM every Monday", "at 
     token_metadata_tool,
     get_all_tokens_tool,
     mint_token_tool,
-    transfer_token_tool
+    transfer_token_tool,
+    balance_tool
   ],
   tool_choice: 'auto'
 });
