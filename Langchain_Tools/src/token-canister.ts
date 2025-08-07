@@ -11,9 +11,9 @@ export interface AgentConfig {
   description: string;
   schedule: AgentSchedule;
   tasks: Task[];
-  created_at: number; 
+  created_at: bigint; 
   prompts : string 
-  next_run?: [number] | []; 
+  next_run?: [bigint] | []; 
 }
 
 export type AgentSchedule = 
@@ -84,7 +84,7 @@ export class TokenCanisterClient{
 
     async create_token(args : CreateTokenArgs){
         if(args.schedule?.type === 'Interval' || args.schedule?.type === 'Cron'){
-
+             
             const agent = this.actor.create_agent(
                 "Create Token Agent",
                 "This agent is used to create tokens and schedule token creation on regular intervals",
@@ -92,7 +92,7 @@ export class TokenCanisterClient{
                 [],
                 Date.now(),
                 `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.initial_supply}, owner ${args.owner} and fee ${args.fee} `,
-                args.schedule.type==='Interval' ? [Date.now() + args.schedule.interval_days] : [0]
+                args.schedule.type==='Interval' ? [Date.now() + Number(args.schedule.interval_days)] : [0]
             );
             console.log("Created agent for token creation", agent);
 
