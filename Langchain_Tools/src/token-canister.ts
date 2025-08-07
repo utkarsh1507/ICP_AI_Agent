@@ -1,6 +1,7 @@
 import { Actor, ActorSubclass, HttpAgent } from "@dfinity/agent";
 import {idlFactory} from "../../src/declarations/ai_agent_icp_backend/index.js";
 import { Principal } from "@dfinity/principal";
+import { bigint } from "zod";
 interface Account {
   owner: string;
   subaccount?: Uint8Array | null;
@@ -24,16 +25,16 @@ export interface Task {
   tool: string;
   params: string;
 }
-export type GetAllAgentsResponse = {
-  [key: string]: AgentConfig;
-};
+export type GetAllAgentsResponse = 
+  [bigint, AgentConfig][];
+;
 export interface TokenCanister {
   icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint,fee : bigint)=>Promise<boolean>;
   icrc2_metadata :(symbol : string) =>Promise<APIResponse>;
   icrc2_get_all_records : () => Promise<APIResponse>;
   icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array]}, amount: bigint, symbol: string) => Promise<APIResponse>;
   create_agent : (name : string , description : string ,schedule : AgentSchedule , tasks : Task[] , created_at : number , prompt : string ,next_run : [number] ) =>Promise<string>;
-  get_all_agents : ()=> Promise<GetAllAgentsResponse>;
+  get_all_agents : ()=> Promise<GetAllAgentsResponse | undefined>;
   transfer_token: (tokenId: string, to: Principal, amount: bigint) => Promise<boolean>;
 }
 interface CreateTokenArgs{
@@ -142,7 +143,7 @@ export class TokenCanisterClient{
         return await this.actor.create_agent(name , description ,schedule , tasks , created_at , prompt ,next_run  );
     }
 
-    async get_all_agents() : Promise<GetAllAgentsResponse>{
+    async get_all_agents() : Promise<GetAllAgentsResponse | undefined>{
         return await this.actor.get_all_agents();
     }
 
