@@ -346,12 +346,12 @@ pub fn icrc2_transfer(symbol : String,args: TransferArgs) -> TransferResult {
 }
 
 #[update]
-pub fn icrc2_mint(to: Account, amount: Nat,symbol : String) -> APIResponse {
-    let caller_principal = msg_caller();
+pub fn icrc2_mint(to: Account, amount: Nat,symbol : String , owner : Principal) -> APIResponse {
+    //let caller_principal = msg_caller();
     TOKEN_STATE.with(|token_state| {
         let mut tokens = token_state.borrow_mut();
         if let Some(state) = tokens.get_mut(&symbol) {
-            if state.minting_account.owner != caller_principal {
+            if state.minting_account.owner != owner {
                 return APIResponse::Text("Not authorized to mint tokens".to_string());
             }
             let recipient_balance = state.balances.get(&to).cloned().unwrap_or_else(|| Nat::from(0u64));
@@ -518,14 +518,14 @@ pub fn icrc2_get_all_records()->APIResponse{
 
 
 #[query]
-pub fn my_tokens () -> APIResponse{
-    let caller = msg_caller();
+pub fn my_tokens (owner : Principal) -> APIResponse{
+    //let caller = msg_caller();
     let tokens = TOKEN_STATE.with(|t|{
         t.borrow()
         .iter()
         .filter_map(
             |(symbol,state)| {
-                if state.metadata.owner == caller {
+                if state.metadata.owner == owner {
                     Some((symbol.clone(),state.metadata.name.clone()))
                 } else {
                     None

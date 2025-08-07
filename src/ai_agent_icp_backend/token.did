@@ -73,7 +73,7 @@ service : {
     // ---- ICRC-2 Token methods ----
     icrc2_init : (text, text, nat8, opt text, opt text, nat,principal, nat) -> (APIResponse);
 
-    icrc2_mint : (record { owner : principal; subaccount : opt blob }, nat, text) -> (APIResponse);
+    icrc2_mint : (record { owner : principal; subaccount : opt blob }, nat, text , principal) -> (APIResponse);
 
 
     icrc2_transfer : (record {
