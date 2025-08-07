@@ -57,6 +57,13 @@ interface APIResponse {
 }
 
 
+interface MintTokenArgs{
+  to : Account;
+  amount : string;
+  symbol : string;
+  owner : string;
+}
+
 export class TokenCanisterClient{
     private actor : ActorSubclass<TokenCanister>;
     constructor(actor : any){
@@ -125,20 +132,20 @@ export class TokenCanisterClient{
     async transfer_token(tokenId: string, to: Principal, amount: bigint): Promise<boolean> {
         return await this.actor.transfer_token(tokenId, to, amount);
     }
-    async mint_token(to: Account, amount: bigint, symbol: string , owner : Principal) {
-      if(to?.subaccount && Array.isArray(to.subaccount)){
-        if(to.subaccount.length === 0){
-            to.subaccount = null;
+    async mint_token(args : MintTokenArgs) {
+      if(args.to?.subaccount && Array.isArray(args.to.subaccount)){
+        if(args.to.subaccount.length === 0){
+            args.to.subaccount = null;
         }else{
-          const bytes = Uint8Array.from(to.subaccount.map((b : string) => parseInt(b)));
-          to.subaccount = bytes;
+          const bytes = Uint8Array.from(args.to.subaccount.map((b : string) => parseInt(b)));
+          args.to.subaccount = bytes;
         }
       }
     const formattedTo: { owner: Principal; subaccount: [] | [Uint8Array] } = {
-        owner: Principal.fromText(to.owner),
-        subaccount: to.subaccount ? [to.subaccount] as [Uint8Array] : [],
+        owner: Principal.fromText(args.to.owner),
+        subaccount: args.to.subaccount ? [args.to.subaccount] as [Uint8Array] : [],
     };
-    return await this.actor.icrc2_mint(formattedTo, amount, symbol,owner);
+    return await this.actor.icrc2_mint(formattedTo, BigInt(args.amount), args.symbol,Principal.fromText(args.owner));
 }
     async create_agent(name : string , description : string ,schedule : AgentSchedule , tasks : Task[] , created_at : number ,prompt : string, next_run : [number]) : Promise<string>{
         return await this.actor.create_agent(name , description ,schedule , tasks , created_at , prompt ,next_run  );
