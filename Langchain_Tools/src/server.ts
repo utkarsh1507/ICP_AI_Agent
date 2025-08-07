@@ -4,6 +4,7 @@ import { TokenCanisterClient } from './token-canister.js';
 import { runTokenCanisterTool } from './test-tool.js';
 import cors from 'cors';
 import { get_all_agents, runTasks } from './scheduler/tasks.js';
+import { Principal } from '@dfinity/principal';
 export const app = express()
 app.use(express.json());
 const port = process.env.PORT || 5000;
@@ -29,8 +30,8 @@ export let tokenCanister : TokenCanisterClient | null = null;
 
 app.post('/api/prompt', async(req,res)=>{
     try {
-        const {prompt} = req.body;
-        const response =await runTokenCanisterTool(prompt);
+        const {prompt,owner} = req.body;
+        const response =await runTokenCanisterTool(prompt,Principal.fromText(owner));
         if(response){
             console.log(response);
             return res.status(200).json(response);

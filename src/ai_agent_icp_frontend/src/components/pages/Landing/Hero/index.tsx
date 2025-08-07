@@ -16,7 +16,10 @@ const Hero: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (prompt !== '') {
-    const aiResponse = await sendPrompt(prompt);
+    console.log('Principal:', principal);
+console.log('Principal text:', principal?.toText?.());
+console.log('Type of principal:', typeof principal);
+    const aiResponse = await sendPrompt(prompt , principal?.toText?.());
     console.log('AI Response:', aiResponse);
 
     type AIResponseItem = { Text?: string; PairList?: [string, string][] };
