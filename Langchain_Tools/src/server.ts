@@ -13,8 +13,8 @@ export let tokenCanister : TokenCanisterClient | null = null;
 (async ()=> {
 
    tokenCanister = await create_token_canister();
-   get_all_agents().then(agents =>{console.log("Fetched agents:", agents)}).catch(err => console.error("Error fetching agents:", err));
-   //runTasks().then(() => console.log("Tasks are running...")).catch(err => console.error("Error running tasks:", err));
+   //get_all_agents().then(agents =>{console.log("Fetched agents:",agents)}).catch(err => console.error("Error fetching agents:", err));
+   runTasks().then(() => console.log("Tasks are running...")).catch(err => console.error("Error running tasks:", err));
    if(!tokenCanister){
     console.error("------------> Failed to create token canister...... Exiting <-----------");
     process.exit(1);
