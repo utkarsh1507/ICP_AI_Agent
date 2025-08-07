@@ -18,17 +18,22 @@ const useAuthClient = ()=>{
         console.log("Auth client initialized");
         setAuthClient(client);
         const isAuth = await client.isAuthenticated();
+        console.log("Is Authenticated:", isAuth);
 
         if(isAuth){
             const identity = client.getIdentity();
-            console.log(" got identity");
+            console.log(" got identity", identity);
             const principal = identity.getPrincipal();
+            console.log("Got principal:", principal._isPrincipal,principal.toText());
             if(!principal.isAnonymous()){
                 setIsAuthenticated(true);
                 setIdentity(identity);
                 setPrincipal(principal);
+                console.log("Principal value:", principal);
+                console.log("Type of principal:", typeof principal);
 
                 const userActor = createActor(backendCanisterId,{agentOptions : {identity : identity}});
+                console.log("Created user actor:", userActor);
 
                 setActors(userActor);
             }

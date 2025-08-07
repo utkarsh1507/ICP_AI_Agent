@@ -2,6 +2,7 @@
 import Together from 'together-ai';
 
 import { tokenCanister } from './server.js';
+import { Principal } from '@dfinity/principal';
 
 
 const together = new Together({apiKey : process.env.TOGETHER_API});
@@ -13,14 +14,16 @@ const create_token_tool = {
         description : 'Initializes a new token from the user',
         parameters : {
             type : 'object',
-            required : ['name', 'symbol', 'decimals','description','logo','total_supply'],
+            required : ['name', 'symbol', 'decimals','description','logo','initial_supply','owner', 'fee'],
             properties : {
                 name : {type : 'string' , description : 'Name of the token'},
                 symbol : {type : 'string' , description : 'Symbol of the token'},
                 decimals : {type : 'number' , description : 'Decimal of the token'},
                 description : {type : 'string' , description : 'Description of the token'},
                 logo : {type : 'string' , description : 'Logo of the token'},
-                total_supply : {type : 'number' , description : 'Total Supply of the token'},
+                initial_supply : {type : 'number' , description : 'Initial Supply of the token'},
+                fee : {type : 'number' , description : 'Fee for the token'},
+                owner : {type : 'string' , description : 'Principal of the owner who will own the token'}
             }
         }
     }
@@ -103,8 +106,8 @@ const transfer_token_tool = {
     }
 }
 
-export async function runTokenCanisterTool(content: string) : Promise<any>{
-   
+export async function runTokenCanisterTool(content: string,owner : Principal) : Promise<any>{
+    const prompt = content + ' Owner will be '+ owner.toString();;
     const availableFunctions = {
         create_token :tokenCanister?.create_token.bind(tokenCanister),
         get_token_metadata : tokenCanister?.get_token_metadata.bind(tokenCanister),
@@ -120,7 +123,8 @@ export async function runTokenCanisterTool(content: string) : Promise<any>{
   content: `You are an AI assistant integrated with tools that interact with a token canister.
 
 Your job is to parse user prompts and call the appropriate function tool using valid arguments.
-
+In the prompt you will be given the owner and you should add owner to the function arguments.
+Do not add or create schedule to the function arguments if the user does not mention any type of time interval in the prompt.    
 If the user's prompt mentions a time interval (e.g. "every 10 seconds", "every 2 minutes", "each day"), then:
 
 Add a new field to the function arguments:
@@ -151,7 +155,7 @@ If the user's prompt mentions a specific time (e.g. "at 3 PM every Monday", "at 
 - "10:15 AM every Friday" → 15 10 * * 5`
 }
 ,
-    { role: 'user', content: content }
+    { role: 'user', content: prompt }
   ],
   tools: [
     create_token_tool,

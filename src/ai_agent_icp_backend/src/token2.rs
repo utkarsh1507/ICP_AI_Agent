@@ -149,16 +149,17 @@ pub fn icrc2_init(
     description: Option<String>,
     logo: Option<String>,
     initial_supply: Nat,
+    owner : Principal,
     fee: Nat,
 ) -> APIResponse {
-    let caller = msg_caller();
+    //let caller = msg_caller();
     debug_print(format!("Initializing ICRC-2 token: {}", name));
     let minting_account = Account {
-        owner: caller,
+        owner: owner,
         subaccount: None,
     };
     let default_account = Account {
-        owner: caller,
+        owner: owner,
         subaccount: None,
     };
     let symbol_clone = symbol.clone();
@@ -170,7 +171,7 @@ pub fn icrc2_init(
         description,
         logo,
         total_supply: initial_supply.clone(),
-        owner: caller,
+        owner: owner,
         fee,
     };
     let mut balances = HashMap::new();

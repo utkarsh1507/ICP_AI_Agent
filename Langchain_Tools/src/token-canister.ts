@@ -1,7 +1,7 @@
 import { Actor, ActorSubclass, HttpAgent } from "@dfinity/agent";
 import {idlFactory} from "../../src/declarations/ai_agent_icp_backend/index.js";
 import { Principal } from "@dfinity/principal";
-import { bigint } from "zod";
+
 interface Account {
   owner: string;
   subaccount?: Uint8Array | null;
@@ -29,7 +29,7 @@ export type GetAllAgentsResponse =
   [bigint, AgentConfig][];
 ;
 export interface TokenCanister {
-  icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint,fee : bigint)=>Promise<boolean>;
+  icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint, owner : Principal,fee : bigint)=>Promise<boolean>;
   icrc2_metadata :(symbol : string) =>Promise<APIResponse>;
   icrc2_get_all_records : () => Promise<APIResponse>;
   icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array]}, amount: bigint, symbol: string) => Promise<APIResponse>;
@@ -43,9 +43,10 @@ interface CreateTokenArgs{
     decimals: number;
     description?: string;
     logo?: string;
-    total_supply: bigint;
+    initial_supply: bigint;
     fee: bigint;
     schedule? : Schedule;
+    owner : string;
 }
 type Schedule = 
   | { type: 'Interval'; interval_days: number }
@@ -82,7 +83,7 @@ export class TokenCanisterClient{
     }
 
     async create_token(args : CreateTokenArgs){
-        if(args.schedule){
+        if(args.schedule?.type === 'Interval' || args.schedule?.type === 'Cron'){
 
             const agent = this.actor.create_agent(
                 "Create Token Agent",
@@ -90,13 +91,13 @@ export class TokenCanisterClient{
                 args.schedule.type==='Interval' ? { Interval : {interval_days : BigInt(args.schedule.interval_days)}} : {Cron : {expression : args.schedule.expression}},
                 [],
                 Date.now(),
-                `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.total_supply} and fee ${args.fee}`,
-                args.schedule.type==='Interval' ? [Date.now() + args.schedule.interval_days * 24 * 60 * 60 * 1000] : [0]
+                `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.initial_supply}, owner ${args.owner} and fee ${args.fee} `,
+                args.schedule.type==='Interval' ? [Date.now() + args.schedule.interval_days] : [0]
             );
             console.log("Created agent for token creation", agent);
 
         }
-        return await this.actor.icrc2_init(args.name , args.symbol,args.decimals,args.description ? [args.description] : [],args.logo? [args.logo] : [],BigInt(args.total_supply),BigInt(args.fee));
+        return await this.actor.icrc2_init(args.name , args.symbol,args.decimals,args.description ? [args.description] : [],args.logo? [args.logo] : [],BigInt(args.initial_supply),Principal.fromText(args.owner),BigInt(args.fee) , );
     }
     async get_token_metadata(args : CreateTokenArgs){
       console.log("Args:", args);
@@ -109,7 +110,7 @@ export class TokenCanisterClient{
                 [],
                 Date.now(),
                 `Get the details of token having symbol ${args.symbol}`,
-                args.schedule.type==='Interval' ? [Date.now() + args.schedule.interval_days * 24 * 60 * 60 * 1000] : [0]
+                args.schedule.type==='Interval' ? [Date.now() + args.schedule.interval_days] : [0]
             );
         if(agent){
           console.log("Created agent for token metadata retrieval", agent);
