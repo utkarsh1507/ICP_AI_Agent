@@ -130,7 +130,7 @@ export async function runTokenCanisterTool(content: string,owner : Principal) : 
         create_token :tokenCanister?.create_token.bind(tokenCanister),
         get_token_metadata : tokenCanister?.get_token_metadata.bind(tokenCanister),
         get_all_tokens : tokenCanister?.get_all_tokens.bind(tokenCanister),
-        mint_token : tokenCanister?.mint_token.bind(tokenCanister),
+        icrc2_mint : tokenCanister?.mint_token.bind(tokenCanister),
         transfer_token : tokenCanister?.transfer_token.bind(tokenCanister)
     }
     const response = await together.chat.completions.create({
