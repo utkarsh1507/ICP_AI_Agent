@@ -33,7 +33,7 @@ const token_metadata_tool = {
     type : 'function',
     function : {
         name : 'get_token_metadata',
-        description : 'Returns the metadat of the ICRC token using symbol',
+        description : 'Returns the metadata of the ICRC token using symbol',
         parameters : {
             type : 'object',
             required : ['symbol'],

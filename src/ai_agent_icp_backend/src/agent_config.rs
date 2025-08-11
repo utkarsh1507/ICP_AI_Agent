@@ -8,12 +8,9 @@ pub struct AgentConfig{
     pub description : String,
     pub owner : Principal,
     pub schedule : Schedule,
-    pub tasks : Vec<Task>,
     pub created_at : i128,
     pub prompt : String,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub next_run : Option<i128>,
+    pub outputs : Vec<Outputs>,
 }
 
 #[derive(Debug, Serialize, Deserialize,CandidType,Clone)]
@@ -22,8 +19,7 @@ pub enum Schedule {
     Cron{expression : String}
 }
 #[derive(Debug, Serialize, Deserialize,CandidType,Clone) ]
-pub struct Task{
-    pub tool : String,
-    pub params : String
+pub struct Outputs{
+    pub output : String,
+    pub timestamp : i128
 }
-

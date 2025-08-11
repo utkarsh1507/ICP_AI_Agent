@@ -37,6 +37,7 @@ export interface TokenCanister {
   get_all_agents : ()=> Promise<GetAllAgentsResponse | undefined>;
   transfer_token: (tokenId: string, to: Principal, amount: bigint) => Promise<boolean>;
   icrc2_balance_of: (owner : Principal , symbol : string)=> Promise<bigint>;
+  store_outputs : (output : string , id : bigint , created_at : bigint)=>Promise<string>;
 }
 interface CreateTokenArgs{
     name: string;
@@ -164,6 +165,13 @@ export class TokenCanisterClient{
     async icrc2_balance_of(args : BalanceTokenArgs) : Promise<bigint>{
         return await this.actor.icrc2_balance_of(Principal.fromText(args.owner), args.symbol);
     }
+
+    async store_outputs(output : string , id : bigint , created_at : bigint){
+      return await this.actor.store_outputs(output,id,created_at);
+    }
+
+
+    
 
   
 
