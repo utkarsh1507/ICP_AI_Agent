@@ -47,6 +47,22 @@ type AgentConfig = record {
   prompt: text;
   
 };
+type Outputs = record {
+    output : text;
+    timestamp : int;
+};
+
+type AgentOutput = record{
+    agent_id: nat64;
+  name: text;
+  description: text;
+  owner: principal;
+  schedule: Schedule;
+  
+  created_at: int;
+  prompt: text;
+  outputs : vec Outputs;
+}
 
 
 service : {
@@ -144,7 +160,7 @@ service : {
         principal       
     ) -> (text) ;
     get_all_agents : () -> (vec record { nat64; AgentConfig }) query;
-    get_user_agents : () -> (vec AgentConfig) query;
+    get_user_agents : (principal) -> (vec AgentOutput) query;
     my_tokens : () -> (APIResponse) query;
     store_output : (text , nat64 ,  int) -> (text);
     

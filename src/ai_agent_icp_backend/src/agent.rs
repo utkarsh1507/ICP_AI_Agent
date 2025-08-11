@@ -1,7 +1,7 @@
 use std::{cell::RefCell, collections::BTreeMap};
 
 use candid::Principal;
-use ic_cdk::{api::msg_caller, query, update};
+use ic_cdk::{query, update};
 
 use crate::agent_config::{AgentConfig, Outputs, Schedule};
 
@@ -58,8 +58,8 @@ pub fn get_all_agents()-> BTreeMap<u64, AgentConfig> {
 }
 
 #[query]
-pub fn get_user_agents() -> Vec<AgentConfig> {
-    let user = msg_caller();
+pub fn get_user_agents(owner : Principal) -> Vec<AgentConfig> {
+    let user = owner;
     USER_AGENTS.with(|user_agents| {
         let user_agents = user_agents.borrow();
         if let Some(agent_ids) = user_agents.get(&user) {
