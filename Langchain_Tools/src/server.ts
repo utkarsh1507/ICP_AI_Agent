@@ -3,7 +3,7 @@ import { create_token_canister } from './create-token-canister.js';
 import { TokenCanisterClient } from './token-canister.js';
 import { runTokenCanisterTool } from './test-tool.js';
 import cors from 'cors';
-import { get_all_agents, runTasks } from './scheduler/tasks.js';
+import { get_all_agents, runTasks, test } from './scheduler/tasks.js';
 import { Principal } from '@dfinity/principal';
 export const app = express()
 app.use(express.json());
@@ -16,6 +16,7 @@ export let tokenCanister : TokenCanisterClient | null = null;
    tokenCanister = await create_token_canister();
    //get_all_agents().then(agents =>{console.log("Fetched agents:",agents)}).catch(err => console.error("Error fetching agents:", err));
    runTasks().then(() => console.log("Tasks are running...")).catch(err => console.error("Error running tasks:", err));
+   //test().then(()=>console.log("Test ran successfully")).catch((err)=>console.log("Error",err));
    if(!tokenCanister){
     console.error("------------> Failed to create token canister...... Exiting <-----------");
     process.exit(1);
