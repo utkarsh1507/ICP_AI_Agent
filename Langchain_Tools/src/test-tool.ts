@@ -25,7 +25,7 @@ const create_token_tool = {
                 fee : {type : 'number' , description : 'Fee for the token'},
                 owner : {type : 'string' , description : 'Principal of the owner who will own the token'}
             }
-        }
+        } 
     }
 }
 
