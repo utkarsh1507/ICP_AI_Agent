@@ -21,6 +21,7 @@ export async function runTasks() {
 async function syncAgents(){
   console.log("Syncing Agents Started ............");
   const agents =await tokenCanister?.get_all_agents();
+  console.log("All agents : ",agents);
   if(!agents) return;
   const seen = new Set<bigint>();
   for(const[rawId , config] of agents){
@@ -32,7 +33,7 @@ async function syncAgents(){
       agent_registry.set(id,config);
       continue;
     }
-    if(JSON.stringify(oldConfig.schedule) !== JSON.stringify(config.schedule)){
+    if(!schedulesEqual(oldConfig.schedule,config.schedule)){
       scheduler.removeById(jobId(id));
       scheduleAgents(id, config);
       agent_registry.set(id , config);
@@ -49,14 +50,23 @@ async function syncAgents(){
 
 function scheduleAgents(id :bigint , config : any){
   const task = new Task(`run-agent-${id}` , async()=>{
-    console.log(`Running task for the agent having id ${id}`);
+    console.log(`Running task for the agent having id ${id} and prompt : ${config.prompt}`);
     await sendPrompt(config.prompt , config.owner , id);
   })
+  console.log(
+  "Scheduling agent",
+  id.toString(), // BigInt to string
+  JSON.stringify(config.schedule, (key, value) =>
+    typeof value === "bigint" ? value.toString() : value,
+    2
+  )
+);
 
   if(config.schedule.Interval){
+    console.log("Entered Task")
     scheduler.addSimpleIntervalJob(
       new SimpleIntervalJob(
-        {days : config.schedule.Interval.interval_days},
+        {seconds : Number(config.schedule.Interval.interval_days)},
         task,
         {id : jobId(id)}
       )
@@ -90,8 +100,10 @@ function jobId(id : bigint){
 
 async function sendPrompt(prompt : string , owner : string,id : bigint){
   try {
+    console.log("Sending the prompt to the server  ",prompt, "with owner : ", owner);
+    console.log("Sending body to the server",JSON.stringify({'prompt' : prompt , 'owner' :owner}))
     const response = await fetch("http://localhost:5000/api/prompt",{
-      body : JSON.stringify({prompt : prompt , owner :owner}),
+      body : JSON.stringify({'prompt' : prompt , 'owner' :owner}),
       method : "POST",
       headers : {
          "Content-Type": "application/json"
@@ -99,7 +111,8 @@ async function sendPrompt(prompt : string , owner : string,id : bigint){
     })
     if(response){
       const output = await response.json();
-      const result = await tokenCanister?.store_outputs(JSON.stringify(output),id , BigInt(Date.now()));
+      console.log("Output from AI : ", JSON.stringify(output));
+      const result = await tokenCanister?.store_output(JSON.stringify(output , (_ , v)=> typeof v ==='bigint' ? v.toString() : v),BigInt(id) , BigInt(Date.now()));
       if(result){
         console.log("Prompt send and output stored", result);
       }
@@ -110,4 +123,14 @@ async function sendPrompt(prompt : string , owner : string,id : bigint){
   } catch (error) {
     console.log("Error occurred in the send Prompt block : ",error);
   }
+}
+
+
+function stringifyWithBigInt(obj : any){
+  return JSON.stringify(obj ,(key , value)=>
+    typeof value === 'bigint' ? value.toString() : value
+  );
+}
+function schedulesEqual(a: any , b : any){
+  return stringifyWithBigInt(a) === stringifyWithBigInt(b);
 }

@@ -10,10 +10,9 @@ export interface AgentConfig {
   name: string;
   description: string;
   schedule: AgentSchedule;
-  tasks: Task[];
   created_at: bigint; 
-  prompts : string 
-  next_run?: [bigint] | []; 
+  prompts : string;
+  owner : Principal;
 }
 
 export type AgentSchedule = 
@@ -33,11 +32,11 @@ export interface TokenCanister {
   icrc2_metadata :(symbol : string) =>Promise<APIResponse>;
   icrc2_get_all_records : () => Promise<APIResponse>;
   icrc2_mint: (to: { owner: Principal; subaccount: [] | [Uint8Array]}, amount: bigint, symbol: string,owner : Principal) => Promise<APIResponse>;
-  create_agent : (name : string , description : string ,schedule : AgentSchedule , tasks : Task[] , created_at : number , prompt : string ,next_run : [number] ) =>Promise<string>;
+  create_agent : (name : string , description : string ,schedule : AgentSchedule ,  created_at : number , prompt : string ,owner : Principal ) =>Promise<string>;
   get_all_agents : ()=> Promise<GetAllAgentsResponse | undefined>;
   transfer_token: (tokenId: string, to: Principal, amount: bigint) => Promise<boolean>;
   icrc2_balance_of: (owner : Principal , symbol : string)=> Promise<bigint>;
-  store_outputs : (output : string , id : bigint , created_at : bigint)=>Promise<string>;
+  store_output : (output : string , id : bigint , created_at : bigint)=>Promise<string>;
 }
 interface CreateTokenArgs{
     name: string;
@@ -69,6 +68,12 @@ interface MintTokenArgs{
 interface BalanceTokenArgs{
   owner : string;
   symbol : string;
+}
+
+interface GetTokenMetadataArgs{
+  symbol : string,
+  schedule? : Schedule,
+  owner : string 
 }
 
 export class TokenCanisterClient{
@@ -103,28 +108,28 @@ export class TokenCanisterClient{
                 "Create Token Agent",
                 "This agent is used to create tokens and schedule token creation on regular intervals",
                 args.schedule.type==='Interval' ? { Interval : {interval_days : BigInt(args.schedule.interval_days)}} : {Cron : {expression : args.schedule.expression}},
-                [],
+           
                 Date.now(),
                 `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.initial_supply}, owner ${args.owner} and fee ${args.fee} `,
-                args.schedule.type==='Interval' ? [Date.now() + Number(args.schedule.interval_days)] : [0]
+               Principal.fromText(args.owner)
             );
             console.log("Created agent for token creation", agent);
 
         }
         return await this.actor.icrc2_init(args.name , args.symbol,args.decimals,args.description ? [args.description] : [],args.logo? [args.logo] : [],BigInt(args.initial_supply),Principal.fromText(args.owner),BigInt(args.fee) , );
     }
-    async get_token_metadata(args : CreateTokenArgs){
-      console.log("Args:", args);
-      if(args.schedule ){
+    async get_token_metadata(args : GetTokenMetadataArgs){
+      console.log("Symbol :", args.symbol , "Schedule : " , args.schedule);
+      if(args.schedule){
         console.log("Creating agent for token metadata retrieval");
         const agent =await this.actor.create_agent(
                 "Token Metadata Agent",
                 "This agent is used to fetch token metadata on regular intervals",
                 args.schedule.type==='Interval' ? { Interval : {interval_days : BigInt(args.schedule.interval_days)}} : {Cron : {expression : args.schedule.expression}},
-                [],
+           
                 Date.now(),
                 `Get the details of token having symbol ${args.symbol}`,
-                args.schedule.type==='Interval' ? [Date.now() + args.schedule.interval_days] : [0]
+               Principal.fromText(args.owner)
             );
         if(agent){
           console.log("Created agent for token metadata retrieval", agent);
@@ -154,8 +159,8 @@ export class TokenCanisterClient{
     };
     return await this.actor.icrc2_mint(formattedTo, BigInt(args.amount), args.symbol,Principal.fromText(args.owner));
 }
-    async create_agent(name : string , description : string ,schedule : AgentSchedule , tasks : Task[] , created_at : number ,prompt : string, next_run : [number]) : Promise<string>{
-        return await this.actor.create_agent(name , description ,schedule , tasks , created_at , prompt ,next_run  );
+    async create_agent(name : string , description : string ,schedule : AgentSchedule ,  created_at : number ,prompt : string,owner : Principal) : Promise<string>{
+        return await this.actor.create_agent(name , description ,schedule  , created_at , prompt, owner );
     }
 
     async get_all_agents() : Promise<GetAllAgentsResponse | undefined>{
@@ -166,8 +171,8 @@ export class TokenCanisterClient{
         return await this.actor.icrc2_balance_of(Principal.fromText(args.owner), args.symbol);
     }
 
-    async store_outputs(output : string , id : bigint , created_at : bigint){
-      return await this.actor.store_outputs(output,id,created_at);
+    async store_output(output : string , id : bigint , created_at : bigint){
+      return await this.actor.store_output(output,id,created_at);
     }
 
 

@@ -13,7 +13,7 @@ thread_local! {
 
 
 #[update]
-pub fn create_agent(name : String , description : String , schedule :Schedule,created_at : i128,prompt : String) -> String{
+pub fn create_agent(name : String , description : String , schedule :Schedule,created_at : i128,prompt : String, owner : Principal) -> String{
     let agent_id = AGENTS.with(|agents| {
         let agents = agents.borrow();
         let mut id = agents.len() as u64;
@@ -34,7 +34,7 @@ pub fn create_agent(name : String , description : String , schedule :Schedule,cr
             agent_id, 
             name: name.clone(), 
             description: description.clone(), 
-            owner: msg_caller(), 
+            owner: owner, 
             schedule: schedule.clone(), 
             created_at: created_at.clone(), 
             prompt: prompt.clone(),
@@ -42,7 +42,7 @@ pub fn create_agent(name : String , description : String , schedule :Schedule,cr
            });
         USER_AGENTS.with(|user_agents|{
             let mut user_agents = user_agents.borrow_mut();
-            user_agents.entry(msg_caller()).or_default().push(agent_id);
+            user_agents.entry(owner).or_default().push(agent_id);
         });
 
         "args.agent_id created successfully".to_string()
