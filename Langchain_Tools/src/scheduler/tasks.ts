@@ -1,6 +1,8 @@
 
 import { CronJob, SimpleIntervalJob, Task, ToadScheduler } from "toad-scheduler";
 import { app, tokenCanister } from "../server.js";
+import { Principal } from "@dfinity/principal";
+
 
 
 let agent_registry : Map<bigint,any>= new Map<bigint,any>();
@@ -98,12 +100,12 @@ function jobId(id : bigint){
 }
 
 
-async function sendPrompt(prompt : string , owner : string,id : bigint){
+async function sendPrompt(prompt : string , owner : Principal,id : bigint){
   try {
     console.log("Sending the prompt to the server  ",prompt, "with owner : ", owner);
     console.log("Sending body to the server",JSON.stringify({'prompt' : prompt , 'owner' :owner}))
     const response = await fetch("http://localhost:5000/api/prompt",{
-      body : JSON.stringify({'prompt' : prompt , 'owner' :owner}),
+      body : JSON.stringify({'prompt' : prompt , 'owner' :owner.toText()}),
       method : "POST",
       headers : {
          "Content-Type": "application/json"
@@ -133,4 +135,14 @@ function stringifyWithBigInt(obj : any){
 }
 function schedulesEqual(a: any , b : any){
   return stringifyWithBigInt(a) === stringifyWithBigInt(b);
+}
+
+
+export async function test(){
+  try {
+   const output = await sendPrompt("Get the details of token having symbol BT",Principal.fromText("tt2ny-e542c-tlafd-ohion-shqfp-m3xeh-a47qn-q5htm-7a37y-fbdbu-pqe"),BigInt(0));
+   console.log(output);
+  } catch (error) {
+    
+  }
 }

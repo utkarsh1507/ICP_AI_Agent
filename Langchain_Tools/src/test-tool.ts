@@ -36,9 +36,10 @@ const token_metadata_tool = {
         description : 'Returns the metadata of the ICRC token using symbol',
         parameters : {
             type : 'object',
-            required : ['symbol'],
+            required : ['symbol','owner'],
             properties : {
-                symbol : {type : 'string' , description : 'Symbol of the token'}
+                symbol : {type : 'string' , description : 'Symbol of the token'},
+                owner : {type : 'string' , description : 'Principal of the owner'}
             }
         }
     }
