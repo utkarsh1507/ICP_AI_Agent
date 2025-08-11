@@ -42,10 +42,10 @@ type AgentConfig = record {
   description: text;
   owner: principal;
   schedule: Schedule;
-  tasks: vec Task;
+  
   created_at: int;
   prompt: text;
-  next_run: opt int;
+  
 };
 
 
@@ -139,13 +139,13 @@ service : {
         text,       
         text,      
         Schedule,  
-        vec Task, 
         int,        
-        text,      
-        opt int     
+        text,
+        principal       
     ) -> (text) ;
     get_all_agents : () -> (vec record { nat64; AgentConfig }) query;
     get_user_agents : () -> (vec AgentConfig) query;
     my_tokens : () -> (APIResponse) query;
+    store_output : (text , nat64 ,  int) -> (text);
     
 };
