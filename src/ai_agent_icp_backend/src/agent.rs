@@ -3,7 +3,7 @@ use std::{cell::RefCell, collections::BTreeMap};
 use candid::Principal;
 use ic_cdk::{api::msg_caller, query, update};
 
-use crate::agent_config::{AgentConfig, Schedule, Task};
+use crate::agent_config::{AgentConfig, Outputs, Schedule};
 
 
 thread_local! {
@@ -13,7 +13,7 @@ thread_local! {
 
 
 #[update]
-pub fn create_agent(name : String , description : String , schedule :Schedule,tasks : Vec<Task>,created_at : i128,prompt : String, next_run : Option<i128>) -> String{
+pub fn create_agent(name : String , description : String , schedule :Schedule,created_at : i128,prompt : String) -> String{
     let agent_id = AGENTS.with(|agents| {
         let agents = agents.borrow();
         let mut id = agents.len() as u64;
@@ -36,10 +36,10 @@ pub fn create_agent(name : String , description : String , schedule :Schedule,ta
             description: description.clone(), 
             owner: msg_caller(), 
             schedule: schedule.clone(), 
-            tasks: tasks.clone(), 
             created_at: created_at.clone(), 
             prompt: prompt.clone(),
-            next_run: next_run.clone()});
+            outputs : Vec::new(),
+           });
         USER_AGENTS.with(|user_agents|{
             let mut user_agents = user_agents.borrow_mut();
             user_agents.entry(msg_caller()).or_default().push(agent_id);
@@ -74,4 +74,15 @@ pub fn get_user_agents() -> Vec<AgentConfig> {
             vec![]
         }
     })
+}
+
+
+#[update]
+pub fn store_output(output : String , id : u64 ,created_at : i128)-> String{
+    AGENTS.with(|agent|{
+        if let Some(my_agent) = agent.borrow_mut().get_mut(&id){
+            my_agent.outputs.push(Outputs{output : output , timestamp : created_at});
+        }
+    });
+    "Output Stored".to_string()
 }
