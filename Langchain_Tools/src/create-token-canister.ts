@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);  
 console.log("File name ->>",__filename)
-const __dirname = dirname(__filename);
+const __dirname = dirname(__filename);  
 console.log("Dir Name ", __dirname);
   
 dotenv.config({path : `${dirname(__dirname)}/.env`});
