@@ -68,7 +68,7 @@ function scheduleAgents(id :bigint , config : any){
     console.log("Entered Task")
     scheduler.addSimpleIntervalJob(
       new SimpleIntervalJob(
-        {seconds : Number(config.schedule.Interval.interval_days)},
+        {seconds : Number(config.schedule.Interval.interval_seconds)},
         task,
         {id : jobId(id)}
       )

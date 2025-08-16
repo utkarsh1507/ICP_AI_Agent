@@ -32,7 +32,7 @@ type Task = record {
 };
 
 type Schedule = variant {
-  Interval: record { interval_days: nat64 };
+  Interval: record { interval_seconds: nat64 };
   Cron: record { expression: text };
 };
 

@@ -16,7 +16,7 @@ export interface AgentConfig {
 }
 
 export type AgentSchedule = 
-  | { Interval: { interval_days: bigint } }
+  | { Interval: { interval_seconds: bigint } }
   | { Cron: { expression: string } };
 
 
@@ -50,7 +50,7 @@ interface CreateTokenArgs{
     owner : string;
 }
 type Schedule = 
-  | { type: 'Interval'; interval_days: number }
+  | { type: 'Interval'; interval_seconds: number }
   | { type: 'Cron'; expression: string };
 interface APIResponse {
   Text : string;
@@ -107,7 +107,7 @@ export class TokenCanisterClient{
             const agent = this.actor.create_agent(
                 "Create Token Agent",
                 "This agent is used to create tokens and schedule token creation on regular intervals",
-                args.schedule.type==='Interval' ? { Interval : {interval_days : BigInt(args.schedule.interval_days)}} : {Cron : {expression : args.schedule.expression}},
+                args.schedule.type==='Interval' ? { Interval : {interval_seconds : BigInt(args.schedule.interval_seconds)}} : {Cron : {expression : args.schedule.expression}},
            
                 Date.now(),
                 `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.initial_supply}, owner ${args.owner} and fee ${args.fee} `,
@@ -125,7 +125,7 @@ export class TokenCanisterClient{
         const agent =await this.actor.create_agent(
                 "Token Metadata Agent",
                 "This agent is used to fetch token metadata on regular intervals",
-                args.schedule.type==='Interval' ? { Interval : {interval_days : BigInt(args.schedule.interval_days)}} : {Cron : {expression : args.schedule.expression}},
+                args.schedule.type==='Interval' ? { Interval : {interval_seconds : BigInt(args.schedule.interval_seconds)}} : {Cron : {expression : args.schedule.expression}},
            
                 Date.now(),
                 `Get the details of token having symbol ${args.symbol}`,

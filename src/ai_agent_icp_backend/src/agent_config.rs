@@ -15,7 +15,7 @@ pub struct AgentConfig{
 
 #[derive(Debug, Serialize, Deserialize,CandidType,Clone)]
 pub enum Schedule {
-    Interval{interval_days : u64},
+    Interval{interval_seconds : u64},
     Cron{expression : String}
 }
 #[derive(Debug, Serialize, Deserialize,CandidType,Clone) ]
