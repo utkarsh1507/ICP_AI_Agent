@@ -1,32 +1,11 @@
 import { Actor, ActorSubclass, HttpAgent } from "@dfinity/agent";
 import {idlFactory} from "../../src/declarations/ai_agent_icp_backend/index.js";
 import { Principal } from "@dfinity/principal";
-
-interface Account {
-  owner: string;
-  subaccount?: Uint8Array | null;
-}
-export interface AgentConfig {
-  name: string;
-  description: string;
-  schedule: AgentSchedule;
-  created_at: bigint; 
-  prompts : string;
-  owner : Principal;
-}
-
-export type AgentSchedule = 
-  | { Interval: { interval_seconds: bigint } }
-  | { Cron: { expression: string } };
+import { AgentSchedule, APIResponse, BalanceTokenArgs, CreateTokenArgs, GetAllAgentsResponse, GetTokenMetadataArgs, MintTokenArgs, UserAgents } from "./types/tool-types.js";
 
 
-export interface Task {
-  tool: string;
-  params: string;
-}
-export type GetAllAgentsResponse = 
-  [bigint, AgentConfig][];
-;
+
+
 export interface TokenCanister {
   icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint, owner : Principal,fee : bigint)=>Promise<boolean>;
   icrc2_metadata :(symbol : string) =>Promise<APIResponse>;
@@ -37,44 +16,10 @@ export interface TokenCanister {
   transfer_token: (tokenId: string, to: Principal, amount: bigint) => Promise<boolean>;
   icrc2_balance_of: (owner : Principal , symbol : string)=> Promise<bigint>;
   store_output : (output : string , id : bigint , created_at : bigint)=>Promise<string>;
-}
-interface CreateTokenArgs{
-    name: string;
-    symbol: string;
-    decimals: number;
-    description?: string;
-    logo?: string;
-    initial_supply: bigint;
-    fee: bigint;
-    schedule? : Schedule;
-    owner : string;
-}
-type Schedule = 
-  | { type: 'Interval'; interval_seconds: number }
-  | { type: 'Cron'; expression: string };
-interface APIResponse {
-  Text : string;
-  PairList : [string, string];
+  get_user_agents : (owner : Principal)=>Promise<UserAgents | undefined>;
 }
 
 
-interface MintTokenArgs{
-  to : Account;
-  amount : string;
-  symbol : string;
-  owner : string;
-}
-
-interface BalanceTokenArgs{
-  owner : string;
-  symbol : string;
-}
-
-interface GetTokenMetadataArgs{
-  symbol : string,
-  schedule? : Schedule,
-  owner : string 
-}
 
 export class TokenCanisterClient{
     private actor : ActorSubclass<TokenCanister>;
@@ -176,11 +121,9 @@ export class TokenCanisterClient{
     }
 
 
-    
-
-  
-
-
+    async get_user_agents(owner : string){
+      return await this.actor.get_user_agents(Principal.fromText(owner));
+    }
 }
 
 
