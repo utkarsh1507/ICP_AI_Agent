@@ -162,6 +162,7 @@ service : {
     get_all_agents : () -> (vec record { nat64; AgentConfig }) query;
     get_user_agents : (principal) -> (vec AgentOutput) query;
     my_tokens : () -> (APIResponse) query;
-    store_output : (text , nat64 ,  int) -> (text);
+    store_output : (text , nat64) -> (text);
+    get_outputs: (text) -> (opt text) query;
     
 };

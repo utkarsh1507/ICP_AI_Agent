@@ -1,12 +1,18 @@
-use std::{cell::RefCell, collections::BTreeMap};
+use std::{cell::RefCell, collections::{BTreeMap, HashMap}};
 
-use candid::Principal;
+use candid::{CandidType, Principal};
 use ic_cdk::{query, update};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
-use crate::agent_config::{AgentConfig, Outputs, Schedule};
+use crate::agent_config::{AgentConfig, Schedule};
 
+
+#[derive(Clone,CandidType,Deserialize,Serialize)]
+pub struct Output(String);
 
 thread_local! {
+    static OUTPUTS : RefCell<HashMap<String,String>> = RefCell::new(HashMap::new());
     static AGENTS : RefCell<BTreeMap<u64, AgentConfig>> = RefCell::new(BTreeMap::new());
     static USER_AGENTS : RefCell<BTreeMap<Principal,Vec<u64>>> = RefCell::new(BTreeMap::new());
 }
@@ -45,7 +51,7 @@ pub fn create_agent(name : String , description : String , schedule :Schedule,cr
             user_agents.entry(owner).or_default().push(agent_id);
         });
 
-        "args.agent_id created successfully".to_string()
+        "agent created successfully".to_string()
     })
 }
 
@@ -78,11 +84,36 @@ pub fn get_user_agents(owner : Principal) -> Vec<AgentConfig> {
 
 
 #[update]
-pub fn store_output(output : String , id : u64 ,created_at : i128)-> String{
+pub fn store_output(output : String , id : u64)-> String{
+    let h = hash_output(&output);
+    OUTPUTS.with(|outputs|{
+        let mut outputs = outputs.borrow_mut();
+        outputs.entry(h.clone()).or_insert(output);
+    });
+
     AGENTS.with(|agent|{
         if let Some(my_agent) = agent.borrow_mut().get_mut(&id){
-            my_agent.outputs.push(Outputs{output : output , timestamp : created_at});
+            my_agent.outputs.push(h.clone());
         }
     });
     "Output Stored".to_string()
+}
+
+
+
+
+fn hash_output(output : &String) -> String{
+    let mut hasher = Sha256::new();
+    hasher.update(output.as_bytes());
+    let result = hasher.finalize();
+    hex::encode(result)
+}
+
+
+
+#[query]
+pub fn get_outputs(hash : String)-> Option<String>{
+    OUTPUTS.with(|output|{
+        output.borrow().get(&hash).cloned()
+    })
 }

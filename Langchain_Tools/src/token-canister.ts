@@ -15,7 +15,7 @@ export interface TokenCanister {
   get_all_agents : ()=> Promise<GetAllAgentsResponse | undefined>;
   transfer_token: (tokenId: string, to: Principal, amount: bigint) => Promise<boolean>;
   icrc2_balance_of: (owner : Principal , symbol : string)=> Promise<bigint>;
-  store_output : (output : string , id : bigint , created_at : bigint)=>Promise<string>;
+  store_output : (output : string , id : bigint)=>Promise<string>;
   get_user_agents : (owner : Principal)=>Promise<UserAgents | undefined>;
 }
 
@@ -116,8 +116,8 @@ export class TokenCanisterClient{
         return await this.actor.icrc2_balance_of(Principal.fromText(args.owner), args.symbol);
     }
 
-    async store_output(output : string , id : bigint , created_at : bigint){
-      return await this.actor.store_output(output,id,created_at);
+    async store_output(output : string , id : bigint ){
+      return await this.actor.store_output(output,id);
     }
 
 

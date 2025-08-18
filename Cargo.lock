@@ -7,11 +7,13 @@ name = "ai_agent_icp_backend"
 version = "0.1.0"
 dependencies = [
  "candid",
+ "hex",
  "ic-cdk",
  "ic-cdk-macros",
  "ic-cdk-timers",
  "serde",
  "serde_json",
+ "sha2",
 ]
 
 [[package]]
