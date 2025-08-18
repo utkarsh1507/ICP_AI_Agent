@@ -68,7 +68,7 @@ function scheduleAgents(id :bigint , config : any){
     console.log("Entered Task")
     scheduler.addSimpleIntervalJob(
       new SimpleIntervalJob(
-        {seconds : Number(config.schedule.Interval.interval_days)},
+        {seconds : Number(config.schedule.Interval.interval_seconds)},
         task,
         {id : jobId(id)}
       )
@@ -114,7 +114,7 @@ async function sendPrompt(prompt : string , owner : Principal,id : bigint){
     if(response){
       const output = await response.json();
       console.log("Output from AI : ", JSON.stringify(output));
-      const result = await tokenCanister?.store_output(JSON.stringify(output , (_ , v)=> typeof v ==='bigint' ? v.toString() : v),BigInt(id) , BigInt(Date.now()));
+      const result = await tokenCanister?.store_output(JSON.stringify(output , (_ , v)=> typeof v ==='bigint' ? v.toString() : v),BigInt(id));
       if(result){
         console.log("Prompt send and output stored", result);
       }

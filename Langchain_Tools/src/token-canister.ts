@@ -1,32 +1,11 @@
 import { Actor, ActorSubclass, HttpAgent } from "@dfinity/agent";
 import {idlFactory} from "../../src/declarations/ai_agent_icp_backend/index.js";
 import { Principal } from "@dfinity/principal";
-
-interface Account {
-  owner: string;
-  subaccount?: Uint8Array | null;
-}
-export interface AgentConfig {
-  name: string;
-  description: string;
-  schedule: AgentSchedule;
-  created_at: bigint; 
-  prompts : string;
-  owner : Principal;
-}
-
-export type AgentSchedule = 
-  | { Interval: { interval_days: bigint } }
-  | { Cron: { expression: string } };
+import { AgentSchedule, APIResponse, BalanceTokenArgs, CreateTokenArgs, GetAllAgentsResponse, GetTokenMetadataArgs, MintTokenArgs, UserAgents } from "./types/tool-types.js";
 
 
-export interface Task {
-  tool: string;
-  params: string;
-}
-export type GetAllAgentsResponse = 
-  [bigint, AgentConfig][];
-;
+
+
 export interface TokenCanister {
   icrc2_init : (name : string , symbol : string , decimals : number ,description : [string] | [],logo : [string] | [] , total_supply : bigint, owner : Principal,fee : bigint)=>Promise<boolean>;
   icrc2_metadata :(symbol : string) =>Promise<APIResponse>;
@@ -36,45 +15,11 @@ export interface TokenCanister {
   get_all_agents : ()=> Promise<GetAllAgentsResponse | undefined>;
   transfer_token: (tokenId: string, to: Principal, amount: bigint) => Promise<boolean>;
   icrc2_balance_of: (owner : Principal , symbol : string)=> Promise<bigint>;
-  store_output : (output : string , id : bigint , created_at : bigint)=>Promise<string>;
-}
-interface CreateTokenArgs{
-    name: string;
-    symbol: string;
-    decimals: number;
-    description?: string;
-    logo?: string;
-    initial_supply: bigint;
-    fee: bigint;
-    schedule? : Schedule;
-    owner : string;
-}
-type Schedule = 
-  | { type: 'Interval'; interval_days: number }
-  | { type: 'Cron'; expression: string };
-interface APIResponse {
-  Text : string;
-  PairList : [string, string];
+  store_output : (output : string , id : bigint)=>Promise<string>;
+  get_user_agents : (owner : Principal)=>Promise<UserAgents | undefined>;
 }
 
 
-interface MintTokenArgs{
-  to : Account;
-  amount : string;
-  symbol : string;
-  owner : string;
-}
-
-interface BalanceTokenArgs{
-  owner : string;
-  symbol : string;
-}
-
-interface GetTokenMetadataArgs{
-  symbol : string,
-  schedule? : Schedule,
-  owner : string 
-}
 
 export class TokenCanisterClient{
     private actor : ActorSubclass<TokenCanister>;
@@ -107,7 +52,7 @@ export class TokenCanisterClient{
             const agent = this.actor.create_agent(
                 "Create Token Agent",
                 "This agent is used to create tokens and schedule token creation on regular intervals",
-                args.schedule.type==='Interval' ? { Interval : {interval_days : BigInt(args.schedule.interval_days)}} : {Cron : {expression : args.schedule.expression}},
+                args.schedule.type==='Interval' ? { Interval : {interval_seconds : BigInt(args.schedule.interval_seconds)}} : {Cron : {expression : args.schedule.expression}},
            
                 Date.now(),
                 `Create token with name ${args.name}, symbol ${args.symbol}, decimals ${args.decimals}, description ${args.description}, logo ${args.logo}, total supply ${args.initial_supply}, owner ${args.owner} and fee ${args.fee} `,
@@ -125,7 +70,7 @@ export class TokenCanisterClient{
         const agent =await this.actor.create_agent(
                 "Token Metadata Agent",
                 "This agent is used to fetch token metadata on regular intervals",
-                args.schedule.type==='Interval' ? { Interval : {interval_days : BigInt(args.schedule.interval_days)}} : {Cron : {expression : args.schedule.expression}},
+                args.schedule.type==='Interval' ? { Interval : {interval_seconds : BigInt(args.schedule.interval_seconds)}} : {Cron : {expression : args.schedule.expression}},
            
                 Date.now(),
                 `Get the details of token having symbol ${args.symbol}`,
@@ -171,16 +116,14 @@ export class TokenCanisterClient{
         return await this.actor.icrc2_balance_of(Principal.fromText(args.owner), args.symbol);
     }
 
-    async store_output(output : string , id : bigint , created_at : bigint){
-      return await this.actor.store_output(output,id,created_at);
+    async store_output(output : string , id : bigint ){
+      return await this.actor.store_output(output,id);
     }
 
 
-    
-
-  
-
-
+    async get_user_agents(owner : string){
+      return await this.actor.get_user_agents(Principal.fromText(owner));
+    }
 }
 
 
