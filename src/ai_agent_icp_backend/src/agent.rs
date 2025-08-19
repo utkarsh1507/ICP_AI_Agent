@@ -88,12 +88,16 @@ pub fn store_output(output : String , id : u64)-> String{
     let h = hash_output(&output);
     OUTPUTS.with(|outputs|{
         let mut outputs = outputs.borrow_mut();
-        outputs.entry(h.clone()).or_insert(output);
+        outputs.insert(h.clone(), output)
     });
 
     AGENTS.with(|agent|{
+
         if let Some(my_agent) = agent.borrow_mut().get_mut(&id){
-            my_agent.outputs.push(h.clone());
+            if !my_agent.outputs.contains(&h){
+
+                my_agent.outputs.push(h.clone());
+            }
         }
     });
     "Output Stored".to_string()
