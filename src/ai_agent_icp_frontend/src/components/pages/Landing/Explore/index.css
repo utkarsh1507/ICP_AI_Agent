@@ -6,8 +6,11 @@
 
 .heading{
     font-size: 44px;
-    color: #cc7fff;
+    color: #ff7fac;
     padding-top: 20px;
+    text-align: center;
+    font-weight: bold;
+    
 }
 
 
@@ -26,4 +29,13 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+
+.cards{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    gap: 20px;
 }
