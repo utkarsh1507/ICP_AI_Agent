@@ -8,6 +8,7 @@ import Hero from '../../components/pages/Landing/Hero'
 import WireframeMesh from '../../components/ui/WireMesh'
 
 import "./index.css"
+import Explore from '../../components/pages/Landing/Explore'
 
 const Landing = () => {
   return (
@@ -31,6 +32,7 @@ const Landing = () => {
     <div className="overlay" />
     <div className='landing-hero'>
     <Features/>
+    <Explore/>
     </div>
   
 

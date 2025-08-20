@@ -14,7 +14,9 @@
 }*/
 
 .features-root{
-  margin-top: 200px;
+  padding-top: 200px;
+  min-height: 100vh;
+  text-align: center;
 }
 
 .features-heading{
@@ -30,4 +32,40 @@
 text-align: center;
 margin: auto;
   font-size: 28px;
+}
+
+
+
+.explore-button{
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #cc7fff;
+  margin: auto;
+  margin-top: 100px;
+  border: none;
+  color: white;
+  font-size: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.explore-button:hover{
+  transform:scale(1.1);
+  box-shadow: 0 8px 20px rgba(204, 127, 255, 0.4);
+  
+}
+
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-in-up.visible {
+  animation: fadeInUp 2s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
