@@ -7,11 +7,11 @@ import Header from '../../components/pages/Landing/Header'
 import Hero from '../../components/pages/Landing/Hero'
 import WireframeMesh from '../../components/ui/WireMesh'
 
-
+import "./index.css"
 
 const Landing = () => {
   return (
-  <div >
+  <div className='landing-root-div'>
     <Header/>
 
     <Canvas 
@@ -23,12 +23,15 @@ const Landing = () => {
           width: "100%",
           height: "100%",
           zIndex: -1, // push behind content
-        
+          background : "black "
         }}
     >
     <WireframeMesh/>
     </Canvas>
+    <div className="overlay" />
+    <div className='landing-hero'>
     <Features/>
+    </div>
   
 
     </div>

@@ -1,0 +1,16 @@
+.landing-root-div{
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.492);
+    inset: 0;
+    height: 100vh;
+}
+
+.landing-hero{
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
