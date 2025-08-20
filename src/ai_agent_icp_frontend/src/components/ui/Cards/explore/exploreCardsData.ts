@@ -14,7 +14,7 @@ export const explore_list = [
     {
         id : 3,
         title : "No Code",
-        description : "Out No Code System ensures no technical knowledge required to create custom tokens, transfer them or burn them.",
+        description : "Our No Code System ensures no technical knowledge required to create custom tokens, transfer them or burn them.",
         imageUrl : ""
     }
 ]

@@ -9,6 +9,7 @@ import WireframeMesh from '../../components/ui/WireMesh'
 
 import "./index.css"
 import Explore from '../../components/pages/Landing/Explore'
+import Tools from '../../components/pages/Landing/Tools'
 
 const Landing = () => {
   return (
@@ -33,6 +34,7 @@ const Landing = () => {
     <div className='landing-hero'>
     <Features/>
     <Explore/>
+    <Tools/>
     </div>
   
 
