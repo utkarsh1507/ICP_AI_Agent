@@ -1,186 +1,33 @@
-.features {
-  background: var(--secondary-bg);
-  position: relative;
-}
-
-.features-header {
+/*.features-root {
+  color: white;
+  font-size: 32px;
   text-align: center;
-  margin-bottom: var(--spacing-3xl);
-}
+  padding-top: 100px;
+  
+  /* Change this *
+  background-color: rgba(0, 0, 0, 0);
 
-.features-title {
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 700;
-  margin-bottom: var(--spacing-lg);
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.features-subtitle {
-  font-size: 1.2rem;
-  color: var(--text-secondary);
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: var(--spacing-xl);
-  margin-top: var(--spacing-3xl);
-}
-
-.feature-card {
-  background: var(--surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-2xl);
-  transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.feature-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--gradient-primary);
-  transform: scaleX(0);
-  transition: transform var(--transition-normal);
-  transform-origin: left;
-}
-
-.feature-card:hover {
-  transform: translateY(-8px);
-  border-color: var(--border-color-hover);
-  box-shadow: var(--shadow-xl);
-}
-
-.feature-card:hover::before {
-  transform: scaleX(1);
-}
-
-.feature-icon {
-  width: 60px;
-  height: 60px;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--spacing-lg);
-  font-size: 1.5rem;
-  position: relative;
-}
-
-.feature-icon::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius);
-  z-index: -1;
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-}
-
-.feature-card:hover .feature-icon::after {
-  opacity: 0.2;
-}
-
-.feature-title {
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-bottom: var(--spacing-md);
-  color: var(--text-primary);
-}
-
-.feature-description {
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: var(--spacing-lg);
-}
-
-.feature-example {
-  background: var(--accent-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-md);
-  font-family: var(--font-family-mono);
-  font-size: 0.875rem;
-  color: var(--brand-accent);
-  position: relative;
-}
-
-.feature-example::before {
-  content: '$ ';
-  color: var(--brand-primary);
-  font-weight: 600;
-}
-
-.feature-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-lg);
-}
-
-.feature-tag {
-  background: var(--accent-bg);
-  color: var(--text-secondary);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--spacing-sm);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border: 1px solid var(--border-color);
-}
-
-.features-cta {
-  text-align: center;
-  margin-top: var(--spacing-3xl);
-  padding-top: var(--spacing-3xl);
-  border-top: 1px solid var(--border-color);
-}
-
-.features-cta-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: var(--spacing-md);
-  color: var(--text-primary);
-}
-
-.features-cta-description {
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-xl);
-  max-width: 500px;
+  /* And add this to center the div *
+  width: 30%;
   margin-left: auto;
   margin-right: auto;
+}*/
+
+.features-root{
+  margin-top: 200px;
 }
 
-@media (max-width: 768px) {
-  .features-grid {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-lg);
-  }
-  
-  .feature-card {
-    padding: var(--spacing-xl);
-  }
-  
-  .feature-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 1.25rem;
-  }
-  
-  .feature-title {
-    font-size: 1.25rem;
-  }
+.features-heading{
+  color: #cc7fff;
+  font-size: 74px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.features-bottom-heading{
+  color: rgb(171, 175, 255);
+  width: 70%;
+text-align: center;
+margin: auto;
+  font-size: 28px;
 }

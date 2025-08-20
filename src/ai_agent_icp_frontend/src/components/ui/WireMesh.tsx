@@ -16,7 +16,7 @@ function WireframeMesh() {
   return (
     <mesh ref={meshRef} position={[0, 0, 1]}>
         <icosahedronGeometry args={[2,1]}/>
-        <meshBasicMaterial color={"orange"} wireframe/>
+        <meshBasicMaterial color={"hotpink"} wireframe/>
     </mesh>
   );
 }

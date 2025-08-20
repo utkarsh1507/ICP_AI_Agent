@@ -55,7 +55,7 @@
 }
 
 .header-nav-link:hover {
-  color: #00ffcc; /* mint highlight */
+  color:  #cc7fff; /* mint highlight */
 }
 
 /* Underline hover effect */
@@ -66,7 +66,7 @@
   height: 2px;
   left: 0;
   bottom: -4px;
-  background-color: #00ffcc;
+  background-color: #9900ff;
   transition: width 0.3s ease;
 }
 
