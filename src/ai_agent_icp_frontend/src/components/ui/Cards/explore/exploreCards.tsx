@@ -1,5 +1,5 @@
 import React from 'react'
-import { ExploreCardsProps } from '../../types/Card/explore'
+import { ExploreCardsProps } from '../../../types/Card/explore/explore'
 import "./exploreCards.css"
 const ExploreCards = (props : ExploreCardsProps) => {
   return (

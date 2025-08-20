@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from 'react'
 import "./index.css"
-import { explore_list } from '../../../ui/Cards/exploreCardsData';
-import ExploreCards from '../../../ui/Cards/exploreCards';
+import { explore_list } from '../../../ui/Cards/explore/exploreCardsData';
+import ExploreCards from '../../../ui/Cards/explore/exploreCards';
+
+
 const Explore = () => {
     const ref = useRef<HTMLDivElement | null>(null);
     

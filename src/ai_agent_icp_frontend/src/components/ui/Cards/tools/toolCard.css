@@ -1,0 +1,55 @@
+.tool-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  width: 320px;
+  min-height: 250px;
+  transition: all 0.3s ease;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.tool-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-color: rgba(138, 43, 226, 0.6);
+}
+
+.tool-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #fff;
+}
+
+.tool-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  color: #ddd;
+}
+
+.tool-prompt {
+  background: rgba(138, 43, 226, 0.15);
+  border-left: 4px solid rgba(138, 43, 226, 0.8);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  overflow-x: auto;
+}
+
+.prompt-label {
+  font-weight: 600;
+  color: #cba6f7;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.prompt-text {
+  font-family: "JetBrains Mono", monospace;
+  color: #f5f5f5;
+  white-space: pre-wrap;
+}
