@@ -1,0 +1,29 @@
+.explore{
+    background-color: rgba(0, 0, 0, 0.318);
+    color: white;
+    min-height: 90vh;
+}
+
+.heading{
+    font-size: 44px;
+    color: #cc7fff;
+    padding-top: 20px;
+}
+
+
+
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-in-up.visible {
+  animation: fadeInUp 2s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
