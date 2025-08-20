@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import "./index.css"
+import { explore_list } from '../../../ui/Cards/exploreCardsData';
+import ExploreCards from '../../../ui/Cards/exploreCards';
 const Explore = () => {
     const ref = useRef<HTMLDivElement | null>(null);
     
@@ -18,9 +20,17 @@ const Explore = () => {
         io.observe(el);
         return () => io.unobserve(el);
       }, []);
+
   return (
     <div ref={ref} className='explore fade-in-up' id='explore-section'>
         <div className='heading'>Revolutionising Token Management</div>
+        <div className='cards'>
+            {
+                explore_list.map((card)=>(
+                    <ExploreCards title={card.title} key={card.id} description={card.description} imageUrl={card.imageUrl}/>
+                ))
+            }
+        </div>
     </div>
   )
 }

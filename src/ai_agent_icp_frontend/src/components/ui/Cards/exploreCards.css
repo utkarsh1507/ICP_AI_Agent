@@ -1,0 +1,51 @@
+.card-root {
+  background: linear-gradient(145deg, rgba(31, 0, 122, 0.25), rgba(31, 0, 122, 0.1));
+  width: 20%;
+  min-height: 70vh;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+
+.card-root:hover {
+  transform: translateY(-10px) scale(1.03);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
+}
+
+
+.card-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #fff;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+
+.card-image {
+  width: 100%;        /* fills the card width */
+  height: 200px;      /* fixed height for consistency */
+  object-fit: cover;  /* crops image while keeping aspect ratio */
+  border-radius: 12px; /* rounded edges */
+  margin: 15px 0;     /* spacing from title/desc */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25); /* subtle shadow */
+}
+
+
+.card-root:hover .card-image {
+  transform: scale(1.05);
+}
+
+
+.card-desc {
+  text-align: start;
+  line-height: 1.6;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+}
