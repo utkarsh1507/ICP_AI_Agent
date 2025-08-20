@@ -3,7 +3,7 @@ import { CronJob, SimpleIntervalJob, Task, ToadScheduler } from "toad-scheduler"
 import { app, tokenCanister } from "../server.js";
 import { Principal } from "@dfinity/principal";
 
-
+    
 
 let agent_registry : Map<bigint,any>= new Map<bigint,any>();
 const SYNC_AGENTS_TIME = 10;
