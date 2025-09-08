@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import './index.css';
+import { useAuth } from '../../../hooks/useAuth';
 
 const Features = () => {
   const ref = useRef<HTMLDivElement | null>(null);
-
+  const {login} = useAuth();
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -30,7 +31,11 @@ const Features = () => {
       <div className="features-bottom-heading">
         Automated AI Agents with smart prompts to handle all your ICRC tokens
       </div>
+      <div className='button-div'>
+
       <button onClick={explore} className="explore-button">Explore ↓</button>
+      <button onClick={login} className="explore-button">Start Now</button>
+      </div>
     </div>
   );
 };
