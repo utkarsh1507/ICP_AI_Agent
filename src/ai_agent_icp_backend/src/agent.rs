@@ -3,7 +3,7 @@ use std::{cell::RefCell, collections::{BTreeMap, HashMap}};
 use candid::{CandidType, Principal};
 use ic_cdk::{query, update};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
+use sha2::{Digest, Sha256};   
 
 use crate::agent_config::{AgentConfig, Schedule};
 

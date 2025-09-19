@@ -12,7 +12,7 @@ pub struct Account {
     pub subaccount: Option<[u8; 32]>,
 }
 
-impl Default for Account {
+impl Default for Account {   
     fn default() -> Self {
         Self {
             owner: Principal::anonymous(),
@@ -470,3 +470,4 @@ pub fn get_all_accounts() -> Vec<(Account, Nat)> {
         }
     })
 } 
+
