@@ -11,7 +11,35 @@ const User = () => {
 
   const { login, isAuthenticated, principal } = auth;
   const [prompt, setPrompt] = useState<string>("");
-  const [messages, setMessages] = useState<{ role: "ai" | "user"; content: string }[]>([]);
+  const [messages, setMessages] = useState<
+    { role: "ai" | "user"; content: string }[]
+  >([]);
+  const [displayedMessages, setDisplayedMessages] = useState<
+    { role: "ai" | "user"; content: string }[]
+  >([]);
+
+  // Typing effect hook
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.role !== "ai") {
+      setDisplayedMessages(messages);
+      return;
+    }
+
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayedMessages((prev) => [
+        ...messages.slice(0, -1),
+        { ...lastMsg, content: lastMsg.content.slice(0, i + 1) },
+      ]);
+      i++;
+      if (i >= lastMsg.content.length) clearInterval(interval);
+    }, 30); // typing speed (ms per char)
+
+    return () => clearInterval(interval);
+  }, [messages]);
 
   useEffect(() => {
     const fetchIntro = async () => {
@@ -55,11 +83,11 @@ const User = () => {
 
   return (
     <section className="dashboard">
-      <Header/>
+      <Header />
       <h1 className="dashboard-title">{principal?.toText?.()}</h1>
 
       <div className="chat-container">
-        {messages.map((msg, idx) => (
+        {displayedMessages.map((msg, idx) => (
           <div
             key={idx}
             className={`chat-message ${msg.role === "ai" ? "ai-message" : "user-message"}`}

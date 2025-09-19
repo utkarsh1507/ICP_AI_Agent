@@ -88,7 +88,7 @@ service : {
     icrc2_mint : (record { owner : principal; subaccount : opt blob }, nat, text , principal) -> (APIResponse);
 
 
-    icrc2_transfer : (record {
+    icrc2_transfer : (text, record {
         from_subaccount : opt blob;
         to : record { owner : principal; subaccount : opt blob };
         amount : nat;
