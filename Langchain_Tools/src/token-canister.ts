@@ -1,7 +1,7 @@
 import { Actor, ActorSubclass, HttpAgent } from "@dfinity/agent";
 import {idlFactory} from "../../src/declarations/ai_agent_icp_backend/index.js";
 import { Principal } from "@dfinity/principal";
-import { AgentSchedule, APIResponse, BalanceTokenArgs, CreateTokenArgs, GetAllAgentsResponse, GetTokenMetadataArgs, MintTokenArgs, UserAgents } from "./types/tool-types.js";
+import { Account, AgentSchedule, APIResponse, BalanceTokenArgs, CreateTokenArgs, GetAllAgentsResponse, GetTokenMetadataArgs, MintTokenArgs, UserAgents } from "./types/tool-types.js";
 
 
 
@@ -14,7 +14,7 @@ export interface TokenCanister {
   create_agent : (name : string , description : string ,schedule : AgentSchedule ,  created_at : number , prompt : string ,owner : Principal ) =>Promise<string>;
   get_all_agents : ()=> Promise<GetAllAgentsResponse | undefined>;
   transfer_token: (tokenId: string, to: Principal, amount: bigint) => Promise<boolean>;
-  icrc2_balance_of: (owner : Principal , symbol : string)=> Promise<bigint>;
+  icrc2_balance_of: (account: Account, symbol: string) => Promise<bigint>;
   store_output : (output : string , id : bigint)=>Promise<string>;
   get_user_agents : (owner : Principal)=>Promise<UserAgents | undefined>;
 }
@@ -99,7 +99,7 @@ export class TokenCanisterClient{
         }
       }
     const formattedTo: { owner: Principal; subaccount: [] | [Uint8Array] } = {
-        owner: Principal.fromText(args.to.owner),
+        owner: args.to.owner,
         subaccount: args.to.subaccount ? [args.to.subaccount] as [Uint8Array] : [],
     };
     return await this.actor.icrc2_mint(formattedTo, BigInt(args.amount), args.symbol,Principal.fromText(args.owner));
@@ -112,9 +112,27 @@ export class TokenCanisterClient{
         return await this.actor.get_all_agents();
     }
 
-    async icrc2_balance_of(args : BalanceTokenArgs) : Promise<bigint>{
-        return await this.actor.icrc2_balance_of(Principal.fromText(args.owner), args.symbol);
+    async icrc2_balance_of(args: BalanceTokenArgs): Promise<bigint> {
+  const principal = Principal.fromText(args.owner);
+
+  let subaccount: Uint8Array | null = null;
+  if (args.subaccount && Array.isArray(args.subaccount)) {
+    if (args.subaccount.length > 0) {
+      subaccount = Uint8Array.from(args.subaccount.map((b: string | number) => Number(b)));
     }
+  } else if (args.subaccount instanceof Uint8Array) {
+    subaccount = args.subaccount;
+  }
+
+  return await this.actor.icrc2_balance_of(
+    {
+      owner: principal, // Principal
+      subaccount,       // Uint8Array | null
+    },
+    args.symbol
+  );
+}
+
 
     async store_output(output : string , id : bigint ){
       return await this.actor.store_output(output,id);

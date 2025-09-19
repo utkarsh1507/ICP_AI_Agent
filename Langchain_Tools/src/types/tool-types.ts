@@ -7,10 +7,17 @@ export interface MintTokenArgs{
   owner : string;
 }
 
-export interface BalanceTokenArgs{
-  owner : string;
-  symbol : string;
+export interface BalanceTokenArgs {
+  owner: string;          // Principal as string
+  symbol: string;
+  subaccount?: Uint8Array | null;
 }
+export interface BalanceAccount{
+  owner : Principal;
+  symbol : string;
+  subaccount?: Uint8Array | null;
+}
+
 
 export interface GetTokenMetadataArgs{
   symbol : string,
@@ -38,7 +45,7 @@ export interface APIResponse {
 }
 
 export interface Account {
-  owner: string;
+  owner: Principal;
   subaccount?: Uint8Array | null;
 }
 export interface AgentConfig {
