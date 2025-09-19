@@ -184,7 +184,7 @@ const transfer_token_tool = {
 const balance_tool = {
   type: "function",
   function: {
-    name: "icrc2_balance",
+    name: "icrc2_balance_of",
     description:
       "Returns the balance of the specified account for a given token symbol.",
     parameters: {
@@ -253,42 +253,7 @@ export async function runTokenCanisterTool(
         content: `You are an AI assistant integrated with tools that interact with a token canister.
 
 Your job is to parse user prompts and call the appropriate function tool using valid arguments.
-In the prompt you will be given the owner and you should add owner to the function arguments.
-Do not add or create schedule to the function arguments if the user does not mention any type of time interval in the prompt.    
-If the user's prompt mentions a time interval (e.g. "every 10 seconds", "every 2 minutes", "each day"), then:
-
-Convert interval to seconds:
-- N seconds → N
-- N minutes → N * 60
-- N hours → N * 3600
-- N days → N * 86400
-
-Add a new field to the function arguments:
-
-"schedule": {
-  "type": "Interval",
-  "interval_seconds": <converted_seconds>
-}
-
-If the user's prompt mentions a specific time (e.g. "at 3 PM every Monday", "at 10:20 PM Tuesday"), convert it to a cron expression in strict 5-field format:
-
-"schedule": {
-  "type": "Cron",
-  "expression": "<cron_expression>"
-}
-
-🟢 Format rules (very important):
-- Use 24-hour format (e.g., 11 PM = 23, 1 AM = 1)
-- Use this exact cron format: MIN HOUR DAY_OF_MONTH MONTH DAY_OF_WEEK
-  - MINUTE: 0-59
-  - HOUR: 0-23
-  - DAY_OF_MONTH: 1-31 or "*"
-  - MONTH: 1-12 or "*"
-  - DAY_OF_WEEK: 0-6 (Sunday = 0, Monday = 1, ..., Saturday = 6)
-
-🧠 Example conversions:
-- "Every Tuesday at 11 PM" → 0 23 * * 2
-- "10:15 AM every Friday" → 15 10 * * 5`,
+In the prompt you will be given the owner and you should add owner to the function arguments.`,
       },
       { role: "user", content: prompt },
     ],

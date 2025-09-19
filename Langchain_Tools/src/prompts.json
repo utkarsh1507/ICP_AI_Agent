@@ -3,6 +3,7 @@
     
     "prompt2" : "Get the details of token having symbol BT",
     
-    "prompt3" : "Get the details of all the tokens"
+    "prompt3" : "Get the details of all the tokens",
+    "hi" : ""
 
 }
