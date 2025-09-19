@@ -134,3 +134,58 @@ body {
     transform: translateY(0);
   }
 }
+/* Chat container */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: #111; /* dark background */
+  border-radius: 12px;
+  margin: 16px 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Common message style */
+.chat-message {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* AI message (left side) */
+.ai-message {
+  align-self: flex-start;
+  background: #2a2a2a;
+  color: #f1f1f1;
+  border-top-left-radius: 4px;
+}
+
+/* User message (right side, pink theme) */
+.user-message {
+  align-self: flex-end;
+  background: #ff4d91;
+  color: #fff;
+  border-top-right-radius: 4px;
+}
+
+/* Scrollbar styling */
+.chat-container::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-container::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 6px;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
