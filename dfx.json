@@ -5,7 +5,7 @@
       "type": "rust",
       "candid": "src/ai_agent_icp_backend/token.did"
     },
-    "ai_agent_icp_frontend": {
+    "ai_agent_icp_frontend": {  
       "dependencies": [
         "ai_agent_icp_backend"
       ],
