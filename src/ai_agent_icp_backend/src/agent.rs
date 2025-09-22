@@ -8,7 +8,7 @@ use sha2::{Digest, Sha256};
 use crate::agent_config::{AgentConfig, Schedule};
 
 
-#[derive(Clone,CandidType,Deserialize,Serialize)]
+#[derive(Clone,CandidType,Deserialize,Serialize)]  
 pub struct Output(String);
 
 thread_local! {
