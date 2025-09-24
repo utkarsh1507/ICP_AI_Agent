@@ -7,7 +7,7 @@ export async function sendPrompt(prompt: string, owner: Principal, id: bigint) {
     const response = await fetch("http://localhost:5000/api/prompt", {
       body: JSON.stringify({ prompt, owner: owner.toText() }),
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },  
     });
 
     if (!response.ok) {
