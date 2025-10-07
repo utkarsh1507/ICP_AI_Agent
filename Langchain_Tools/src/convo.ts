@@ -1,7 +1,7 @@
 import Together from "together-ai";
 const together = new Together({ apiKey: process.env.TOGETHER_API });
 export async function introBotChat(){
-    try {
+    try {  
         const response = await together.chat.completions.create({
             model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
             messages : [
